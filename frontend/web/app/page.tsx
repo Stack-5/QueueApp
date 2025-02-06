@@ -1,6 +1,16 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -33,54 +43,51 @@ export default function Home() {
         Please wait for an SMS notification, which will be sent to you shortly.
       </p>
 
-      <div className="bg-white shadow-md p-6 mt-6 rounded-lg w-full max-w-md">
-        <label className="block text-gray-700 text-sm font-semibold mb-2">
-          Purpose:
-        </label>
-        <Select>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a purpose" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="inquiry">Inquiry</SelectItem>
-              <SelectItem value="appointment">Appointment</SelectItem>
-              <SelectItem value="others">Others</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-
-        <label className="block text-gray-700 text-sm font-semibold mt-4">
-          Cellphone Number (required):
-        </label>
-        <input
-          type="text"
-          placeholder="Enter your cellphone number"
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-        />
-
-        <label className="block text-gray-700 text-sm font-semibold mt-4">
-          Student ID (if you are a student, not required for guest):
-        </label>
-        <input
-          type="text"
-          placeholder="Enter your Student ID"
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-        />
-
-        <label className="block text-gray-700 text-sm font-semibold mt-4">
-          Email Address (required):
-        </label>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-        />
-
-        <div className="flex justify-center mt-6">
-          <Button className="w-full">Submit</Button>
-        </div>
-      </div>
+      <Card className="w-[350px] mt-6">
+        <CardHeader>
+          <CardTitle>Enter Details</CardTitle>
+          <CardDescription>
+            Fill in your information to proceed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="purpose">Purpose</Label>
+                <Select>
+                  <SelectTrigger id="purpose">
+                    <SelectValue placeholder="Select a purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="inquiry">Inquiry</SelectItem>
+                      <SelectItem value="appointment">Appointment</SelectItem>
+                      <SelectItem value="others">Others</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="phone">Cellphone Number (required)</Label>
+                <Input id="phone" placeholder="Enter your cellphone number" />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="student-id">Student ID (if applicable)</Label>
+                <Input id="student-id" placeholder="Enter your Student ID" />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="email">Email Address (required)</Label>
+                <Input id="email" type="email" placeholder="Enter your email" />
+              </div>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline">Cancel</Button>
+          <Button>Submit</Button>
+        </CardFooter>
+      </Card>
 
       <p className="text-gray-600 mt-4 text-sm">
         Remember to always check your notifications. Thank you!
@@ -90,4 +97,3 @@ export default function Home() {
     </div>
   );
 }
-
