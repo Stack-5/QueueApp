@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
+import NeuQueueLogo from "../components/NeuQueueLogo";
 
 const SplashScreen = () => {
   const [loaded, error] = useFonts({
@@ -17,7 +18,9 @@ const SplashScreen = () => {
   });
 
   useEffect(() => {
-    if (loaded) router.replace("/main");
+    if (loaded) {
+      setTimeout(() => router.replace("/menu"), 300);
+    }
   }, [loaded]);
 
   if (!loaded && !error) {
@@ -32,19 +35,9 @@ const SplashScreen = () => {
         backgroundColor: "#F9FAFB",
       }}
     >
-      <View style={{ flexDirection: "row" }}>
-        <Text style={[styles.splashText, { color: "#0077B6" }]}>NEU</Text>
-        <Text style={[styles.splashText, { color: "#FFBF00" }]}>QUEUE</Text>
-      </View>
+      <NeuQueueLogo />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  splashText: {
-    fontFamily: "lexendbold",
-    fontSize: 40,
-  },
-});
 
 export default SplashScreen;

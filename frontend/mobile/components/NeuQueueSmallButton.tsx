@@ -1,16 +1,14 @@
 import { Text, TouchableOpacity } from "react-native";
+import React from "react";
 import { CommonButtonProps } from "../types/common-components";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
+import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 
-const NeuQueueButton = ({ title, buttonFn }: CommonButtonProps) => {
+const NeuQueueSmallButton = ({ title, buttonFn }: CommonButtonProps) => {
   return (
     <TouchableOpacity
       style={{
         backgroundColor: "#FFBF00",
-        padding: wp(4),
+        padding: wp(2),
         borderRadius: wp(3),
       }}
       activeOpacity={0.8}
@@ -21,7 +19,7 @@ const NeuQueueButton = ({ title, buttonFn }: CommonButtonProps) => {
           textAlign: "center",
           fontFamily: "lexendsemibold",
           color: "#333333",
-          fontSize: wp(5),
+          fontSize: wp(4),
         }}
       >
         {title}
@@ -30,4 +28,4 @@ const NeuQueueButton = ({ title, buttonFn }: CommonButtonProps) => {
   );
 };
 
-export default NeuQueueButton;
+export default NeuQueueSmallButton;
