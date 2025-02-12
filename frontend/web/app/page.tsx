@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation"; 
+import { useSearchParams, useRouter } from "next/navigation"; 
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,10 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEffect } from "react";
 
 export default function Home() {
   const searchParams = useSearchParams();
-  const userID = searchParams.get("userID") || "";
+  const router = useRouter();
+  const userID = searchParams.get("userID");
+
+  useEffect(() => {
+    if (!userID) {
+      router.replace("/401"); 
+    }
+  }, [userID, router]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
@@ -42,7 +50,6 @@ export default function Home() {
         form! ⏳
       </p>
 
-      {/* This dynamically changes the ID number based on the params*/}
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
         Your queue ID is <span className="font-bold">#{userID}</span>.
       </h2>
@@ -100,7 +107,6 @@ export default function Home() {
         Remember to always check your notifications. Thank you!
       </p>
 
-      {/* Static countdown timer for now */}
       <p className="text-red-500 font-bold mt-2 text-sm">00:01:45</p>
     </div>
   );
