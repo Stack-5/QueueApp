@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React, { Dispatch, SetStateAction } from "react";
 import { CustomerMode } from "../types/mode";
+import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 type ServerButtonProps = {
   title: string;
@@ -31,8 +32,8 @@ const ServeButton = ({
 const styles = StyleSheet.create({
   textStyle: {
     fontFamily: "lexendsemibold",
-    fontSize: 16,
-    color: "#F9FAFB",
+    fontSize: wp(4),
+    color: "#333333",
   },
 });
 export default ServeButton;

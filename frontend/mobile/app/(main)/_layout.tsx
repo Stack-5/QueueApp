@@ -13,9 +13,12 @@ const MainLayout = () => {
           backgroundColor: "#0077B6",
         },
         statusBarHidden: true,
+        headerTintColor: "#F9FAFB",
       }}
     >
-      <Stack.Screen name="main" />
+      <Stack.Screen name="menu" options={{ headerShown: false }} />
+      <Stack.Screen name="main" options={{ headerBackVisible: false }} />
+      <Stack.Screen name="qrcode" />
     </Stack>
   );
 };
