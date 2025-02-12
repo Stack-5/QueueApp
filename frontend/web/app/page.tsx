@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { useSearchParams } from "next/navigation"; 
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,12 +23,17 @@ import {
 } from "@/components/ui/select";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const userID = searchParams.get("userID") || "";
+
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
       <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
         NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
       </h1>
-      <p className="text-gray-650 mt-2 text-center font-bold">Thank you for scanning!</p>
+      <p className="text-gray-650 mt-2 text-center font-bold">
+        Thank you for scanning!
+      </p>
       <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
         This system helps manage queues efficiently, allowing you to join a
         virtual line without waiting physically. You’ll receive an SMS
@@ -34,9 +42,9 @@ export default function Home() {
         form! ⏳
       </p>
 
-      {/* Use useStates or useEffect to dynamically change the ID number*/}
+      {/* This dynamically changes the ID number based on the params*/}
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your Queue ID # is <span className="font-bold">3</span>.
+        Your queue ID is <span className="font-bold">#{userID}</span>.
       </h2>
 
       <p className="text-gray-600 mt-2 text-center">
@@ -92,7 +100,7 @@ export default function Home() {
         Remember to always check your notifications. Thank you!
       </p>
 
-      {/* Use useStates or useEffect to dynamically change the time */}
+      {/* Static countdown timer for now */}
       <p className="text-red-500 font-bold mt-2 text-sm">00:01:45</p>
     </div>
   );
