@@ -1,13 +1,28 @@
-import { View, Text } from "react-native";
-import QRCode from "react-native-qrcode-svg";
+import { View, Text, Image } from "react-native";
 import NeuQueueLogo from "../../components/NeuQueueLogo";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import NeuQueueButton from "../../components/NeuQueueButton";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const QRCodeScreen = () => {
+  const [qrCode, setQrCode] = useState<string|null>(null);
+
+   useEffect(() => {
+    const fetchQRCode = async() => {
+      try {
+        const response = await axios.get("http://10.0.2.2:5001/retchizu-94b36/us-central1/neu/queue/qrcode");
+        setQrCode(response.data.qrCode);
+      } catch (error) {
+        alert((error as Error).message);
+      }
+    }
+  
+    fetchQRCode();
+  },[]) 
+
   return (
     <View
       style={{
@@ -34,13 +49,16 @@ const QRCodeScreen = () => {
           }}
         >
           <View style={{ borderColor: "#0077B6", borderWidth: wp(0.5) }}>
-            <QRCode value={`https://retchizu-94b36.web.app`} size={wp(50)} />
+           {qrCode && (
+             <Image
+             source={{
+              uri:qrCode
+             }}
+             style={{ width: 200, height: 200 }}
+           />
+           )}
           </View>
         </View>
-      </View>
-
-      <View style={{ marginVertical: hp(2), paddingHorizontal: wp(20) }}>
-        <NeuQueueButton title="Print" buttonFn={() => {}} />
       </View>
     </View>
   );
