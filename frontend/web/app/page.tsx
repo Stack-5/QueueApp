@@ -29,10 +29,10 @@ export default function Home() {
   const userID = searchParams.get("userID");
 
   useEffect(() => {
-    if (!userID) {
-      router.replace("/401"); 
+    if (typeof window !== "undefined" && !userID) {
+      router.replace("/error/unauthorized");
     }
-  }, [userID, router]);
+  }, [userID, router]);  
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
