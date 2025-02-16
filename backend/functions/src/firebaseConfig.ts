@@ -9,7 +9,7 @@ admin.initializeApp({
   databaseURL: process.env.DATABASE_URL,
 });
 
-const realTimeDb = admin.database();
+const realtimeDb = admin.database();
+const firestoreDb = admin.firestore();
 
-
-export {realTimeDb};
+export {realtimeDb, firestoreDb};

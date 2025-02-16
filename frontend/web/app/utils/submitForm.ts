@@ -1,6 +1,5 @@
 import axios from "axios";
 
-const neuRootURL = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
 export const submitForm = async (
   queueID: string,
@@ -8,12 +7,11 @@ export const submitForm = async (
   phoneNumber: string,
   token: string | null
 ) => {
-  if (!neuRootURL) throw new Error("NEXT_PUBLIC_CUID_REQUEST_URL is not set.");
+  if (!queueID) throw new Error("Queue ID is missing.");
   if (!purpose) throw new Error("Please select a purpose.");
   if (!phoneNumber || phoneNumber.length < 10)
     throw new Error("Invalid phone number.");
   if (!token) throw new Error("Missing authentication token.");
-  if (!queueID) throw new Error("Queue ID is missing.");
 
   const formData = {
     queueID,
@@ -23,20 +21,23 @@ export const submitForm = async (
     createdAt: new Date().toISOString(),
   };
 
-  console.log("Using environment URL:", neuRootURL);
+  console.log("Using environment URL:", apiURL);
   console.log("Submitting with token:", token);
-  console.log("Final request URL:", `${neuRootURL}/queue/add`);
+  console.log("Final request URL:", `${apiURL}/queue/add`);
 
   try {
-    const response = await axios.post(`${neuRootURL}/queue/add`, formData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token.trim()}`,
-      },
-    });
+    const response = await axios.post(
+      `${apiURL}/queue/add`, 
+      formData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token.trim()}`, 
+        },
+      }
+    );
 
-    console.log("Full Axios response:", response);
-    return response?.data || response;
+    return response.data;
   } catch (error) {
     console.error("Axios request failed:", error);
     throw error;
