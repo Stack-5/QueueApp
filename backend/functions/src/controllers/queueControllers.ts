@@ -40,18 +40,40 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
         purpose: purpose,
         cellphoneNumber: cellphoneNumber,
         customerStatus: customerStatus,
-        verified: true,
         createdAt: createdAt,
       });
-      const docRef = firestoreDb.collection("invalid-tokens").doc(req.token);
-      await docRef.set({
+      const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(req.token);
+      await invalidTokenRef.set({
         cellphoneNumber: cellphoneNumber,
         createdAt: createdAt,
+      });
+
+      const queueNumberRef = firestoreDb.collection("queue").doc("queue-number");
+      await firestoreDb.runTransaction(async (transaction) => {
+        const queueNumberDoc = await transaction.get(queueNumberRef);
+        if (!queueNumberDoc.exists) {
+          throw new Error("Queue number does not exist");
+        }
+        const {current} = queueNumberDoc.data() as {current: number};
+        transaction.update(queueNumberRef, {current: current + 1});
       });
       res.status(201).json({message: "Added Successfully"});
     } else {
       res.status(401).json({message: "Invalid or missing token"});
     }
+  } catch (error) {
+    res.status(500).json({message: (error as Error).message});
+  }
+};
+
+
+export const getCurrentQueueID = async (req:Request, res:Response) => {
+  try {
+    const queueNumberRef = firestoreDb.collection("queue").doc("queue-number");
+    const queueNumberDoc = await queueNumberRef.get();
+
+    const {current} = queueNumberDoc.data() as {current: number};
+    res.status(200).json({queueID: current});
   } catch (error) {
     res.status(500).json({message: (error as Error).message});
   }
