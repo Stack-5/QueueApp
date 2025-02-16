@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import QRcode from "qrcode";
-import { realTimeDb } from "../firebaseConfig";
+import { firestoreDb, realtimeDb } from "../firebaseConfig";
 import { addToQueueSchema } from "../zod-schemas/addToQueue";
 import QueueRequest from "../types/QueueRequest";
 
@@ -25,12 +25,12 @@ export const generateQrCode = async (req: Request, res: Response) => {
   }
 };
 
-export const addQueue = (req:QueueRequest, res:Response): void => {
+export const addQueue = async (req:QueueRequest, res:Response): Promise<void> => {
   try {
-    if (req.id) {
+    if (req.id && req.token) {
       const parsedBody = addToQueueSchema.parse(req.body);
       const {queueID, purpose, cellphoneNumber, customerStatus, createdAt} = parsedBody;
-      const ref = realTimeDb.ref("queue");
+      const ref = realtimeDb.ref("queue");
       const prefix = purpose.substring(0, 1).toUpperCase();
       const queueIDWithPrefix = `${prefix}${queueID.toString().padStart(3, "0")}`;
       const newCustomerRef = ref.child(queueIDWithPrefix);
@@ -40,6 +40,11 @@ export const addQueue = (req:QueueRequest, res:Response): void => {
         cellphoneNumber: cellphoneNumber,
         customerStatus: customerStatus,
         verified: true,
+        createdAt: createdAt,
+      });
+      const docRef = firestoreDb.collection("invalid-tokens").doc(req.token);
+      await docRef.set({
+        cellphoneNumber: cellphoneNumber,
         createdAt: createdAt,
       });
       res.status(201).json({message: "Added Successfully"});
