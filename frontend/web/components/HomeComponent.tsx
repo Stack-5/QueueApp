@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import * as React from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,33 +25,78 @@ import {
 import { useEffect, useState } from "react";
 import { submitForm } from "@/app/utils/submitForm";
 
-export default function HomeComponent() {
+const HomeComponent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [queueID, setQueueID] = useState<string | null>(null);
+
+  const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
+
+  console.log("Initial token:", token);
+  console.log("API URL:", apiUrl); 
 
   useEffect(() => {
     if (typeof window !== "undefined" && !token) {
+      console.warn("No token found, redirecting to unauthorized page.");
       router.replace("/error/unauthorized");
     }
   }, [token, router]);
 
+  useEffect(() => {
+    const fetchQueueID = async () => {
+      if (!token) {
+        console.warn("Missing token, skipping fetch.");
+        return;
+      }
+
+      if (!apiUrl) {
+        console.error("API URL is missing from environment variables.");
+        return;
+      }
+
+      const queueUrl = `${apiUrl}/queue/current`;
+      console.log(`Fetching queue ID from: ${queueUrl}`);
+
+      try {
+        const response = await axios.get(queueUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("Queue ID fetch response:", response.data);
+        setQueueID(response.data.queueID);
+      } catch (error) {
+        console.error("Failed to fetch queue ID:", error);
+      }
+    };
+
+    fetchQueueID();
+  }, [token, apiUrl]);
+
   const handleSubmit = async () => {
-    if (!purpose || !phoneNumber) {
-      return alert("Please fill out all fields.");
+    console.log("Submit button clicked");
+    console.log("Current form values:", { queueID, purpose, phoneNumber });
+
+    if (!purpose || !phoneNumber || !queueID) {
+      console.warn("Form validation failed: Missing required fields.");
+      alert("Please fill out all fields.");
+      return;
     }
 
+    console.log("Token before submission:", token);
     setLoading(true);
 
     try {
-      const response = await submitForm(purpose, phoneNumber, token);
+      const response = await submitForm(queueID, purpose, phoneNumber, token);
+      console.log("Form submitted successfully:", response);
       alert("Form submitted successfully!");
-      console.log("Response:", response);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error submitting form:", error);
       alert("Failed to submit form. Please try again.");
     } finally {
       setLoading(false);
@@ -74,7 +120,7 @@ export default function HomeComponent() {
       </p>
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your queue ID is <span className="font-bold">#TestNumber</span>. // TODO: Replace with actual queue ID
+        Your queue ID is <span className="font-bold">#{queueID || "..."}</span>.
       </h2>
 
       <p className="text-gray-600 mt-2 text-center">
@@ -99,7 +145,7 @@ export default function HomeComponent() {
                 <SelectContent>
                   <SelectGroup>
                     <SelectItem value="inquiry">Inquiry</SelectItem>
-                    <SelectItem value="appointment">Appointment</SelectItem>
+                    <SelectItem value="payment">Payment</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -123,7 +169,11 @@ export default function HomeComponent() {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Submitting..." : <span className="font-bold">Submit</span>}
+            {loading ? (
+              "Submitting..."
+            ) : (
+              <span className="font-bold">Submit</span>
+            )}
           </Button>
         </CardFooter>
       </Card>
@@ -135,4 +185,6 @@ export default function HomeComponent() {
       <p className="text-red-500 font-bold mt-2 text-sm">00:01:45</p>
     </div>
   );
-}
+};
+
+export default HomeComponent;
