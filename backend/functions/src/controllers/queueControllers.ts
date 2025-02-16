@@ -16,7 +16,7 @@ export const generateQrCode = async (req: Request, res: Response) => {
     if (!SECRET_KEY || !NEUQUEUE_ROOT_URL) {
       throw new Error("Missing Secret in environmental variables!");
     }
-    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "3m"});
+    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "10m"});
     const url = `${NEUQUEUE_ROOT_URL}?token=${token}`;
     const qrCodeDataUrl = await QRcode.toDataURL(url);
 
@@ -78,3 +78,21 @@ export const getCurrentQueueID = async (req:Request, res:Response) => {
     res.status(500).json({message: (error as Error).message});
   }
 };
+
+export const incrementScanCountOnSuccess = async (req: QueueRequest, res: Response) => {
+  try {
+    if (req.token) {
+      const scanCountRef = realtimeDb.ref("scan-count");
+
+      await scanCountRef.transaction((currentValue) => {
+        return (currentValue || 0) + 1;
+      });
+      res.status(200).json({message: "success"});
+    } else {
+      res.status(401).json({message: "Invalid or missing token"});
+    }
+  } catch (error) {
+    res.status(500).json({message: (error as Error).message});
+  }
+};
+

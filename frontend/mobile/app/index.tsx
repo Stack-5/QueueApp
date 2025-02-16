@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
-import React, { useEffect } from "react";
+import { View } from "react-native";
+import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
 import NeuQueueLogo from "../components/NeuQueueLogo";
