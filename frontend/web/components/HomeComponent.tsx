@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { submitForm } from "@/app/utils/submitForm";
+import notifyQueue from "@/app/utils/notifyQueue"; 
 
 const HomeComponent = () => {
   const searchParams = useSearchParams();
@@ -70,6 +71,9 @@ const HomeComponent = () => {
 
         console.log("Queue ID fetch response:", response.data);
         setQueueID(response.data.queueID);
+
+
+        await notifyQueue(token, apiUrl);  
       } catch (error) {
         console.error("Failed to fetch queue ID:", error);
       }

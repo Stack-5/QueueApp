@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const neuRootURL = process.env.NEXT_PUBLIC_CUID_REQUEST_URL; 
+const neuRootURL = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
 export const submitForm = async (
   queueID: string,
