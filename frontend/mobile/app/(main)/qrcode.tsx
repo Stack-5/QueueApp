@@ -1,4 +1,4 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, ActivityIndicator } from "react-native";
 import NeuQueueLogo from "../../components/NeuQueueLogo";
 import {
   widthPercentageToDP as wp,
@@ -6,22 +6,36 @@ import {
 } from "react-native-responsive-screen";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { CUID_REQUEST_URL } from "@env";
+import { realtimeDb } from "../../firebaseConfig";
+import { goOffline, goOnline, onValue, ref } from "firebase/database";
 
 const QRCodeScreen = () => {
-  const [qrCode, setQrCode] = useState<string|null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
 
-   useEffect(() => {
-    const fetchQRCode = async() => {
-      try {
-        const response = await axios.get("http://10.0.2.2:5001/retchizu-94b36/us-central1/neu/queue/qrcode");
-        setQrCode(response.data.qrCode);
-      } catch (error) {
-        alert((error as Error).message);
-      }
+  const fetchQRCode = async () => {
+    try {
+      const response = await axios.get(
+        `${CUID_REQUEST_URL}/queue/qrcode`
+      );
+      setQrCode(response.data.qrCode);
+    } catch (error) {
+      alert((error as Error).message);
     }
-  
+  };
+
+  useEffect(() => {
+    const scanCountRef = ref(realtimeDb, "scan-count");
     fetchQRCode();
-  },[]) 
+    goOnline(realtimeDb);
+    const unsubscribe = onValue(scanCountRef, () => {
+      fetchQRCode();
+    });
+    return () => {
+      unsubscribe();
+      goOffline(realtimeDb);
+    };
+  }, []);
 
   return (
     <View
@@ -41,24 +55,27 @@ const QRCodeScreen = () => {
         >
           Scan to Join Queue
         </Text>
-        <View
-          style={{
-            borderColor: "#FFBF00",
-            borderWidth: wp(0.5),
-            padding: wp(2),
-          }}
-        >
-          <View style={{ borderColor: "#0077B6", borderWidth: wp(0.5) }}>
-           {qrCode && (
-             <Image
-             source={{
-              uri:qrCode
-             }}
-             style={{ width: 200, height: 200 }}
-           />
-           )}
+
+        {qrCode ? (
+          <View
+            style={{
+              borderColor: "#FFBF00",
+              borderWidth: wp(0.5),
+              padding: wp(2),
+            }}
+          >
+            <View style={{ borderColor: "#0077B6", borderWidth: wp(0.5) }}>
+              <Image
+                source={{
+                  uri: qrCode,
+                }}
+                style={{ width: 200, height: 200 }}
+              />
+            </View>
           </View>
-        </View>
+        ) : (
+          <ActivityIndicator size={wp(5)} />
+        )}
       </View>
     </View>
   );
