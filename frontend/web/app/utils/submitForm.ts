@@ -1,6 +1,5 @@
 import axios from "axios";
 
-const apiURL = process.env.CUID_REQUEST_URL;
 
 export const submitForm = async (
   queueID: string,
