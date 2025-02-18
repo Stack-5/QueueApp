@@ -34,7 +34,7 @@ const HomeComponent = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [queueID, setQueueID] = useState<string | null>(null);
-  const [queueLoading, setQueueLoading] = useState(true); // Loading state for queue ID
+  const [queueLoading, setQueueLoading] = useState(true);
 
   const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
@@ -72,14 +72,14 @@ const HomeComponent = () => {
 
         console.log("Queue ID fetch response:", response.data);
         setQueueID(response.data.queueID);
-        setQueueLoading(false); 
+        setQueueLoading(false);
 
         if (response.data.queueID) {
-          await notifyQueue(token, apiUrl); 
+          await notifyQueue(token, apiUrl);
         }
       } catch (error) {
         console.error("Failed to fetch queue ID:", error);
-        setQueueLoading(false); 
+        setQueueLoading(false);
       }
     };
 
@@ -151,7 +151,7 @@ const HomeComponent = () => {
             style={{ color: "#0077B6" }}
           >
             Your queue ID is{" "}
-            <span className="font-bold">#{queueID || "..."}</span>.
+            <span className="font-bold">{`#${queueID || "..."}`}</span>.
           </h2>
 
           <p className="text-gray-600 mt-2 text-center">
@@ -213,7 +213,6 @@ const HomeComponent = () => {
           <p className="text-gray-600 font-extrabold mt-4 text-sm">
             Remember to always check your notifications. Thank you!
           </p>
-
         </>
       )}
     </div>
