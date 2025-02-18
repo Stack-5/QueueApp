@@ -120,8 +120,9 @@ const HomeComponent = () => {
           <div className="animate-spin text-6xl mb-4">🔄</div>
 
           <p className="text-lg text-gray-600 font-bold">
-            Just a moment... we're getting your spot in line!
+            Just a moment... we&apos;re getting your spot in line!
           </p>
+
           <p className="mt-2 text-sm text-gray-500">
             Please hold on while we grab your details.
           </p>
@@ -150,8 +151,8 @@ const HomeComponent = () => {
             className="text-2xl font-semibold mt-4"
             style={{ color: "#0077B6" }}
           >
-            Your queue ID is{" "}
-            <span className="font-bold">{`#${queueID || "..."}`}</span>.
+            Your queue ID is&nbsp;
+            <span className="font-bold">{`#${queueID || "&hellip;"}`}</span>.
           </h2>
 
           <p className="text-gray-600 mt-2 text-center">
