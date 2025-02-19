@@ -23,8 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { submitForm } from "@/app/utils/submitForm";
-import notifyQueue from "@/app/utils/notifyQueue"; 
+import { submitForm } from "@/utils/submitForm";
+import notifyQueue from "@/utils/notifyQueue";
 
 const HomeComponent = () => {
   const searchParams = useSearchParams();
@@ -34,11 +34,12 @@ const HomeComponent = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [queueID, setQueueID] = useState<string | null>(null);
+  const [queueLoading, setQueueLoading] = useState(true);
 
   const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
   console.log("Initial token:", token);
-  console.log("API URL:", apiUrl); 
+  console.log("API URL:", apiUrl);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !token) {
@@ -71,11 +72,14 @@ const HomeComponent = () => {
 
         console.log("Queue ID fetch response:", response.data);
         setQueueID(response.data.queueID);
+        setQueueLoading(false);
 
-
-        await notifyQueue(token, apiUrl);  
+        if (response.data.queueID) {
+          await notifyQueue(token, apiUrl);
+        }
       } catch (error) {
         console.error("Failed to fetch queue ID:", error);
+        setQueueLoading(false);
       }
     };
 
@@ -109,84 +113,109 @@ const HomeComponent = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
-      <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
-        NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
-      </h1>
-      <p className="text-gray-650 mt-2 text-center font-bold">
-        Thank you for scanning!
-      </p>
-      <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-        This system helps manage queues efficiently, allowing you to join a
-        virtual line without waiting physically. You’ll receive an SMS
-        notification when it’s your turn. You only have{" "}
-        <span className="text-red-500 font-bold">2 minutes</span> to answer this
-        form! ⏳
-      </p>
+      {queueLoading ? (
+        <div className="text-center">
+          <h2 className="text-xl mb-4">Fetching your place in the queue...</h2>
 
-      <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your queue ID is <span className="font-bold">#{queueID || "..."}</span>.
-      </h2>
+          <div className="animate-spin text-6xl mb-4">🔄</div>
 
-      <p className="text-gray-600 mt-2 text-center">
-        Please wait for an SMS notification, which will be sent to you shortly.
-      </p>
+          <p className="text-lg text-gray-600 font-bold">
+            Just a moment... we&apos;re getting your spot in line!
+          </p>
 
-      <Card className="w-[350px] mt-6">
-        <CardHeader>
-          <CardTitle>Required section</CardTitle>
-          <CardDescription>
-            To proceed, please enter your SMS details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="purpose">Purpose</Label>
-              <Select onValueChange={setPurpose}>
-                <SelectTrigger id="purpose" className="border-[#FFBF00]">
-                  <SelectValue placeholder="Select a purpose" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="inquiry">Inquiry</SelectItem>
-                    <SelectItem value="payment">Payment</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="phone">Cellphone Number (required)</Label>
-              <Input
-                id="phone"
-                placeholder="Enter your cellphone number"
-                className="border-[#FFBF00]"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-            </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Please hold on while we grab your details.
+          </p>
+
+          <div className="text-2xl mt-4 animate-pulse text-[#FFBF00]">
+            ⏳ Your turn is coming soon!
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button
-            className="w-40"
-            style={{ backgroundColor: "#0077B6", color: "#FFBF00" }}
-            onClick={handleSubmit}
-            disabled={loading}
+        </div>
+      ) : (
+        <>
+          <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
+            NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
+          </h1>
+          <p className="text-gray-650 mt-2 text-center font-bold">
+            Thank you for scanning!
+          </p>
+          <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
+            This system helps manage queues efficiently, allowing you to join a
+            virtual line without waiting physically. You’ll receive an SMS
+            notification when it’s your turn. You only have to wait{" "}
+            <span className="text-red-500 font-bold">a couple of minutes</span>{" "}
+            at most for you to be served at the cashier.⏳
+          </p>
+
+          <h2
+            className="text-2xl font-semibold mt-4"
+            style={{ color: "#0077B6" }}
           >
-            {loading ? (
-              "Submitting..."
-            ) : (
-              <span className="font-bold">Submit</span>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+            Your queue ID is&nbsp;
+            <span className="font-bold">{`#${queueID || "&hellip;"}`}</span>.
+          </h2>
 
-      <p className="text-gray-600 font-bold mt-4 text-sm">
-        Remember to always check your notifications. Thank you!
-      </p>
+          <p className="text-gray-600 mt-2 text-center">
+            Please wait for an SMS notification, which will be sent to you
+            shortly.
+          </p>
 
-      <p className="text-red-500 font-bold mt-2 text-sm">00:01:45</p>
+          <Card className="w-[350px] mt-6">
+            <CardHeader>
+              <CardTitle>Required section</CardTitle>
+              <CardDescription>
+                To proceed, please enter your SMS details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="purpose">Purpose</Label>
+                  <Select onValueChange={setPurpose}>
+                    <SelectTrigger id="purpose" className="border-[#FFBF00]">
+                      <SelectValue placeholder="Select a purpose" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="inquiry">Inquiry</SelectItem>
+                        <SelectItem value="payment">Payment</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="phone">Cellphone Number (required)</Label>
+                  <Input
+                    id="phone"
+                    placeholder="Enter your cellphone number"
+                    className="border-[#FFBF00]"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <Button
+                className="w-40"
+                style={{ backgroundColor: "#0077B6", color: "#FFBF00" }}
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  "Submitting..."
+                ) : (
+                  <span className="font-bold">Submit</span>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <p className="text-gray-600 font-extrabold mt-4 text-sm">
+            Remember to always check your notifications. Thank you!
+          </p>
+        </>
+      )}
     </div>
   );
 };
