@@ -23,6 +23,16 @@ import {
 } from "@/components/ui/select";
 import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
@@ -30,6 +40,8 @@ const HomeComponent = () => {
   const [loading, setLoading] = useState(false);
   const { queueID, token } = useQueueContext();
   const [fadeIn, setFadeIn] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setFadeIn(true), 100);
@@ -37,7 +49,8 @@ const HomeComponent = () => {
 
   const handleSubmit = async () => {
     if (!purpose || !phoneNumber || !queueID) {
-      alert("Please fill out all fields.");
+      setAlertMessage("Please fill out all fields.");
+      setIsAlertOpen(true);
       return;
     }
 
@@ -45,10 +58,11 @@ const HomeComponent = () => {
 
     try {
       await submitForm(queueID, purpose, phoneNumber, token);
-      alert("Form submitted successfully!");
+      setAlertMessage("Form submitted successfully!");
     } catch {
-      alert("Failed to submit form. Please try again.");
+      setAlertMessage("Failed to submit form. Please try again.");
     } finally {
+      setIsAlertOpen(true);
       setLoading(false);
     }
   };
@@ -132,6 +146,20 @@ const HomeComponent = () => {
       <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
         Remember to always check your notifications. Thank you!
       </p>
+
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notification</AlertDialogTitle>
+            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
