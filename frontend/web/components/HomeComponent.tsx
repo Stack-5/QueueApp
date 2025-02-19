@@ -36,24 +36,17 @@ const HomeComponent = () => {
   }, []);
 
   const handleSubmit = async () => {
-    console.log("Submit button clicked");
-    console.log("Current form values:", { queueID, purpose, phoneNumber });
-
     if (!purpose || !phoneNumber || !queueID) {
-      console.warn("Form validation failed: Missing required fields.");
       alert("Please fill out all fields.");
       return;
     }
 
-    console.log("Token before submission:", token);
     setLoading(true);
 
     try {
-      const response = await submitForm(queueID, purpose, phoneNumber, token);
-      console.log("Form submitted successfully:", response);
+      await submitForm(queueID, purpose, phoneNumber, token);
       alert("Form submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch {
       alert("Failed to submit form. Please try again.");
     } finally {
       setLoading(false);
@@ -131,11 +124,7 @@ const HomeComponent = () => {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? (
-              "Submitting..."
-            ) : (
-              <span className="font-bold">Submit</span>
-            )}
+            {loading ? "Submitting..." : <span className="font-bold">Submit</span>}
           </Button>
         </CardFooter>
       </Card>
