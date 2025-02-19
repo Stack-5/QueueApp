@@ -4,6 +4,5 @@ export const addToQueueSchema = object({
   queueID: number(),
   purpose: string(),
   cellphoneNumber: string(),
-  customerStatus: string(),
-  createdAt: string(),
+  timestamp: number(),
 });

@@ -1,13 +1,12 @@
 "use client";
 
-import * as React from "react";
+import LoadingComponent from "@/components/LoadingComponent";
 import { Suspense } from "react";
-import HomeComponent from "@/components/HomeComponent";
 
 export default function Home() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <HomeComponent />
+    <Suspense>
+      <LoadingComponent />
     </Suspense>
   );
 }

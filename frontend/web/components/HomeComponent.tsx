@@ -1,8 +1,7 @@
 "use client";
 
-import axios from "axios";
 import * as React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,69 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { submitForm } from "@/utils/submitForm";
-import notifyQueue from "@/utils/notifyQueue";
+import { useQueueContext } from "@/context/QueueContext";
 
 const HomeComponent = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const token = searchParams.get("token");
+
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const [queueID, setQueueID] = useState<string | null>(null);
-  const [queueLoading, setQueueLoading] = useState(true);
+  const {queueID, token} = useQueueContext();
+  //const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
-  const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
-
-  console.log("Initial token:", token);
-  console.log("API URL:", apiUrl);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && !token) {
-      console.warn("No token found, redirecting to unauthorized page.");
-      router.replace("/error/unauthorized");
-    }
-  }, [token, router]);
-
-  useEffect(() => {
-    const fetchQueueID = async () => {
-      if (!token) {
-        console.warn("Missing token, skipping fetch.");
-        return;
-      }
-
-      if (!apiUrl) {
-        console.error("API URL is missing from environment variables.");
-        return;
-      }
-
-      const queueUrl = `${apiUrl}/queue/current`;
-      console.log(`Fetching queue ID from: ${queueUrl}`);
-
-      try {
-        const response = await axios.get(queueUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log("Queue ID fetch response:", response.data);
-        setQueueID(response.data.queueID);
-        setQueueLoading(false);
-
-        if (response.data.queueID) {
-          await notifyQueue(token, apiUrl);
-        }
-      } catch (error) {
-        console.error("Failed to fetch queue ID:", error);
-        setQueueLoading(false);
-      }
-    };
-
-    fetchQueueID();
-  }, [token, apiUrl]);
 
   const handleSubmit = async () => {
     console.log("Submit button clicked");
@@ -113,26 +61,6 @@ const HomeComponent = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
-      {queueLoading ? (
-        <div className="text-center">
-          <h2 className="text-xl mb-4">Fetching your place in the queue...</h2>
-
-          <div className="animate-spin text-6xl mb-4">🔄</div>
-
-          <p className="text-lg text-gray-600 font-bold">
-            Just a moment... we&apos;re getting your spot in line!
-          </p>
-
-          <p className="mt-2 text-sm text-gray-500">
-            Please hold on while we grab your details.
-          </p>
-
-          <div className="text-2xl mt-4 animate-pulse text-[#FFBF00]">
-            ⏳ Your turn is coming soon!
-          </div>
-        </div>
-      ) : (
-        <>
           <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
             NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
           </h1>
@@ -214,10 +142,8 @@ const HomeComponent = () => {
           <p className="text-gray-600 font-extrabold mt-4 text-sm">
             Remember to always check your notifications. Thank you!
           </p>
-        </>
-      )}
-    </div>
-  );
+
+    </div>);
 };
 
 export default HomeComponent;

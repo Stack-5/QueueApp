@@ -30,7 +30,7 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
   try {
     if (req.id && req.token) {
       const parsedBody = addToQueueSchema.parse(req.body);
-      const {queueID, purpose, cellphoneNumber, customerStatus, createdAt} = parsedBody;
+      const {queueID, purpose, cellphoneNumber, timestamp} = parsedBody;
       const ref = realtimeDb.ref("queue");
       const prefix = purpose.substring(0, 1).toUpperCase();
       const queueIDWithPrefix = `${prefix}${queueID.toString().padStart(3, "0")}`;
@@ -39,24 +39,15 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
         queueID: queueID,
         purpose: purpose,
         cellphoneNumber: cellphoneNumber,
-        customerStatus: customerStatus,
-        createdAt: createdAt,
+        customerStatus: "pending",
+        timestamp: timestamp,
       });
       const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(req.token);
       await invalidTokenRef.set({
         cellphoneNumber: cellphoneNumber,
-        createdAt: createdAt,
+        timestamp: timestamp,
       });
 
-      const queueNumberRef = firestoreDb.collection("queue").doc("queue-number");
-      await firestoreDb.runTransaction(async (transaction) => {
-        const queueNumberDoc = await transaction.get(queueNumberRef);
-        if (!queueNumberDoc.exists) {
-          throw new Error("Queue number does not exist");
-        }
-        const {current} = queueNumberDoc.data() as {current: number};
-        transaction.update(queueNumberRef, {current: current + 1});
-      });
       res.status(201).json({message: "Added Successfully"});
     } else {
       res.status(401).json({message: "Invalid or missing token"});
@@ -83,6 +74,16 @@ export const incrementScanCountOnSuccess = async (req: QueueRequest, res: Respon
   try {
     if (req.token) {
       const scanCountRef = realtimeDb.ref("scan-count");
+
+      const queueNumberRef = firestoreDb.collection("queue").doc("queue-number");
+      await firestoreDb.runTransaction(async (transaction) => {
+        const queueNumberDoc = await transaction.get(queueNumberRef);
+        if (!queueNumberDoc.exists) {
+          throw new Error("Queue number does not exist");
+        }
+        const {current} = queueNumberDoc.data() as {current: number};
+        transaction.update(queueNumberRef, {current: current + 1});
+      });
 
       await scanCountRef.transaction((currentValue) => {
         return (currentValue || 0) + 1;
