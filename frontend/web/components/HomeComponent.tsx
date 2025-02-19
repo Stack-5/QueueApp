@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,129 +21,147 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {  useState } from "react";
 import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const HomeComponent = () => {
-
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const {queueID, token} = useQueueContext();
-  //const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
+  const { queueID, token } = useQueueContext();
+  const [fadeIn, setFadeIn] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
+  useEffect(() => {
+    setTimeout(() => setFadeIn(true), 100);
+  }, []);
 
   const handleSubmit = async () => {
-    console.log("Submit button clicked");
-    console.log("Current form values:", { queueID, purpose, phoneNumber });
-
     if (!purpose || !phoneNumber || !queueID) {
-      console.warn("Form validation failed: Missing required fields.");
-      alert("Please fill out all fields.");
+      setAlertMessage("Please fill out all fields.");
+      setIsAlertOpen(true);
       return;
     }
 
-    console.log("Token before submission:", token);
     setLoading(true);
 
     try {
-      const response = await submitForm(queueID, purpose, phoneNumber, token);
-      console.log("Form submitted successfully:", response);
-      alert("Form submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Failed to submit form. Please try again.");
+      await submitForm(queueID, purpose, phoneNumber, token);
+      setAlertMessage("Form submitted successfully!");
+    } catch {
+      setAlertMessage("Failed to submit form. Please try again.");
     } finally {
+      setIsAlertOpen(true);
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-6">
-          <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
-            NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
-          </h1>
-          <p className="text-gray-650 mt-2 text-center font-bold">
-            Thank you for scanning!
-          </p>
-          <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-            This system helps manage queues efficiently, allowing you to join a
-            virtual line without waiting physically. You’ll receive an SMS
-            notification when it’s your turn. You only have to wait{" "}
-            <span className="text-red-500 font-bold">a couple of minutes</span>{" "}
-            at most for you to be served at the cashier.⏳
-          </p>
+    <div
+      className={`flex flex-col items-center justify-center h-screen bg-gray-100 p-6 transition-all duration-700 ${
+        fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+    >
+      <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
+        NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
+      </h1>
+      <p className="text-gray-650 mt-2 text-center font-bold">
+        Thank you for scanning!
+      </p>
+      <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
+        This system helps manage queues efficiently, allowing you to join a
+        virtual line without waiting physically. You’ll receive an SMS
+        notification when it’s your turn. You only have to wait{" "}
+        <span className="text-red-500 font-bold">a couple of minutes</span> at
+        most for you to be served at the cashier.⏳
+      </p>
 
-          <h2
-            className="text-2xl font-semibold mt-4"
-            style={{ color: "#0077B6" }}
+      <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
+        Your queue ID is&nbsp;
+        <span className="font-bold">{`#${queueID || "..."}`}</span>.
+      </h2>
+
+      <p className="text-gray-600 mt-2 text-center">
+        Please wait for an SMS notification, which will be sent to you shortly.
+      </p>
+
+      <Card className="w-[350px] mt-6">
+        <CardHeader>
+          <CardTitle>Required section</CardTitle>
+          <CardDescription>
+            To proceed, please enter your SMS details.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="purpose">Purpose</Label>
+              <Select onValueChange={setPurpose}>
+                <SelectTrigger id="purpose" className="border-[#FFBF00]">
+                  <SelectValue placeholder="Select a purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="inquiry">Inquiry</SelectItem>
+                    <SelectItem value="payment">Payment</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="phone">Cellphone Number (required)</Label>
+              <Input
+                id="phone"
+                placeholder="Enter your cellphone number"
+                className="border-[#FFBF00]"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <Button
+            className="w-40"
+            style={{ backgroundColor: "#0077B6", color: "#FFBF00" }}
+            onClick={handleSubmit}
+            disabled={loading}
           >
-            Your queue ID is&nbsp;
-            <span className="font-bold">{`#${queueID || "&hellip;"}`}</span>.
-          </h2>
+            {loading ? "Submitting..." : <span className="font-bold">Submit</span>}
+          </Button>
+        </CardFooter>
+      </Card>
 
-          <p className="text-gray-600 mt-2 text-center">
-            Please wait for an SMS notification, which will be sent to you
-            shortly.
-          </p>
+      <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
+        Remember to always check your notifications. Thank you!
+      </p>
 
-          <Card className="w-[350px] mt-6">
-            <CardHeader>
-              <CardTitle>Required section</CardTitle>
-              <CardDescription>
-                To proceed, please enter your SMS details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid w-full items-center gap-4">
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="purpose">Purpose</Label>
-                  <Select onValueChange={setPurpose}>
-                    <SelectTrigger id="purpose" className="border-[#FFBF00]">
-                      <SelectValue placeholder="Select a purpose" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="inquiry">Inquiry</SelectItem>
-                        <SelectItem value="payment">Payment</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="phone">Cellphone Number (required)</Label>
-                  <Input
-                    id="phone"
-                    placeholder="Enter your cellphone number"
-                    className="border-[#FFBF00]"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <Button
-                className="w-40"
-                style={{ backgroundColor: "#0077B6", color: "#FFBF00" }}
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? (
-                  "Submitting..."
-                ) : (
-                  <span className="font-bold">Submit</span>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <p className="text-gray-600 font-extrabold mt-4 text-sm">
-            Remember to always check your notifications. Thank you!
-          </p>
-
-    </div>);
+      <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notification</AlertDialogTitle>
+            <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 };
 
 export default HomeComponent;
