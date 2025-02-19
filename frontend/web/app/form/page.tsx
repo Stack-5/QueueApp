@@ -2,19 +2,20 @@
 
 import { useQueueContext } from "@/context/QueueContext";
 import { useRouter } from "next/navigation";
+import HomeComponent from "@/components/HomeComponent";
+import { useEffect } from "react";
 
 const FormPage = () => {
-  //put the home component here
-  const {token} = useQueueContext();
+  const { token } = useQueueContext();
   const router = useRouter();
-  console.log("token in form", token);
-  if(!token?.trim()) router.replace("/error/unauthorized")
-  return(
-    <div>
-      <h1>Put the HomeComponent Here</h1>
-    </div>
-  )
-}
 
+  useEffect(() => {
+    if (!token?.trim()) {
+      router.replace("/error/unauthorized");
+    }
+  }, [token, router]);
+
+  return <HomeComponent />;
+};
 
 export default FormPage;
