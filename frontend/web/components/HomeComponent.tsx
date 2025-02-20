@@ -3,42 +3,19 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const { queueID, token } = useQueueContext();
+  const { queueID, token } = useQueueContext(); // access queueID and token from context
   const [fadeIn, setFadeIn] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -57,7 +34,7 @@ const HomeComponent = () => {
     setLoading(true);
 
     try {
-      await submitForm(queueID, purpose, phoneNumber, token);
+      await submitForm(queueID, purpose, phoneNumber, token); 
       setAlertMessage("Form submitted successfully!");
     } catch {
       setAlertMessage("Failed to submit form. Please try again.");
@@ -76,15 +53,10 @@ const HomeComponent = () => {
       <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
         NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
       </h1>
-      <p className="text-gray-650 mt-2 text-center font-bold">
-        Thank you for scanning!
-      </p>
+      <p className="text-gray-650 mt-2 text-center font-bold">Thank you for scanning!</p>
       <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-        This system helps manage queues efficiently, allowing you to join a
-        virtual line without waiting physically. You’ll receive an SMS
-        notification when it’s your turn. You only have to wait{" "}
-        <span className="text-red-500 font-bold">a couple of minutes</span> at
-        most for you to be served at the cashier.⏳
+        This system helps manage queues efficiently, allowing you to join a virtual line without waiting physically. You’ll receive an SMS notification when it’s your turn. You only have to wait{" "}
+        <span className="text-red-500 font-bold">a couple of minutes</span> at most for you to be served at the cashier.⏳
       </p>
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
@@ -92,16 +64,12 @@ const HomeComponent = () => {
         <span className="font-bold">{`#${queueID || "..."}`}</span>.
       </h2>
 
-      <p className="text-gray-600 mt-2 text-center">
-        Please wait for an SMS notification, which will be sent to you shortly.
-      </p>
+      <p className="text-gray-600 mt-2 text-center">Please wait for an SMS notification, which will be sent to you shortly.</p>
 
       <Card className="w-[350px] mt-6">
         <CardHeader>
           <CardTitle>Required section</CardTitle>
-          <CardDescription>
-            To proceed, please enter your SMS details.
-          </CardDescription>
+          <CardDescription>To proceed, please enter your SMS details.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid w-full items-center gap-4">
@@ -143,9 +111,7 @@ const HomeComponent = () => {
         </CardFooter>
       </Card>
 
-      <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
-        Remember to always check your notifications. Thank you!
-      </p>
+      <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">Remember to always check your notifications. Thank you!</p>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
@@ -154,9 +120,7 @@ const HomeComponent = () => {
             <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>
-              OK
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

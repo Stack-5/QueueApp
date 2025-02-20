@@ -1,10 +1,15 @@
 "use client";
 
 import { useQueueContext } from "@/context/QueueContext";
-import notifyQueue from "@/utils/notifyQueue";
-import axios from "axios";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import {jwtDecode} from "jwt-decode"; 
+
+// Don't wanna make another file type for this one, so I'll just hard code it here
+interface DecodedToken {
+  queueNumber: string;
+}
 
 const LoadingComponent = () => {
   const searchParams = useSearchParams();
@@ -15,37 +20,29 @@ const LoadingComponent = () => {
 
   useEffect(() => {
     const fetchQueueID = async () => {
-      const queueUrl =
-        "http://127.0.0.1:5001/retchizu-94b36/us-central1/neu/queue/current";
+      if (!token) {
+        console.error("[LoadingComponent] Token is missing.");
+        return;
+      }
 
       try {
-        const response = await axios.get(queueUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const decodedToken = jwtDecode<DecodedToken>(token);
+        const queueNumber = decodedToken.queueNumber; 
 
-        if (response.data.queueID) {
-          setQueueID(response.data.queueID);
-          setToken(token);
-          await notifyQueue(token);
-
+        if (queueNumber) {
+          setQueueID(queueNumber);  
+          setToken(token);           
           setFadeOut(true);
 
           setTimeout(() => {
-            router.replace("/form");
+            router.replace("/form"); 
           }, 500);
+        } else {
+          console.error("[LoadingComponent] Queue number is not available in token.");
         }
       } catch (error) {
-        console.error("[LoadingComponent] Error fetching queue ID:", error);
-
-        if (axios.isAxiosError(error) && error.response) {
-          if (error.response.status === 401) {
-            router.replace("/error/unauthorized");
-          } else if (error.response.status === 500) {
-            router.replace("/error/internal-server-error");
-          }
-        }
+        console.error("[LoadingComponent] Error decoding token:", error);
+        router.replace("/error/unauthorized");
       }
     };
 
@@ -60,9 +57,7 @@ const LoadingComponent = () => {
     >
       <div className="w-12 h-12 border-4 border-gray-300 border-t-[#FFBF00] rounded-full animate-spin mb-6"></div>
       <h2 className="text-xl font-semibold text-gray-700">Fetching your queue...</h2>
-      <p className="text-sm text-gray-500 mt-2">
-        Please wait while we get your spot in line.
-      </p>
+      <p className="text-sm text-gray-500 mt-2">Please wait while we get your spot in line.</p>
     </div>
   );
 };
