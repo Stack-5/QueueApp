@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 import QueueRequest from "../types/QueueRequest";
-import { firestoreDb } from "../firebaseConfig";
+import { firestoreDb } from "../config/firebaseConfig";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
@@ -32,7 +32,7 @@ export const verifyJWT = async (req:QueueRequest, res:Response, next: NextFuncti
     next();
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      res.status(401).json({message:"Token has expired"})
+      res.status(401).json({message: "Token has expired"});
     } else {
       res.status(500).json({message: (error as Error).message});
     }

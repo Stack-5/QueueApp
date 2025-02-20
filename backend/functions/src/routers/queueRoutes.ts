@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/verifyJWT";
-import { addQueue, generateQrCode, getCurrentQueueID, incrementScanCountOnSuccess }
+import { addQueue, generateQrCode, incrementScanCountOnSuccess }
   from "../controllers/queueControllers";
 
 
@@ -9,7 +9,6 @@ const router: Router = Router();
 
 router.get("/qrcode", generateQrCode);
 router.post("/add", verifyJWT, addQueue);
-router.get("/current", verifyJWT, getCurrentQueueID);
 router.post("/notify", verifyJWT, incrementScanCountOnSuccess);
 
 export default router;
