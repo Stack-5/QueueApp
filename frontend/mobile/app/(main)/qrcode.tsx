@@ -1,40 +1,43 @@
-import { View, Text, Image, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import NeuQueueLogo from "../../components/NeuQueueLogo";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { CUID_REQUEST_URL } from "@env";
 import { realtimeDb } from "../../firebaseConfig";
-import { goOffline, goOnline, onValue, ref } from "firebase/database";
+import { onValue, ref } from "firebase/database";
+import { SvgXml } from "react-native-svg";
 
 const QRCodeScreen = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
 
+
   const fetchQRCode = async () => {
     try {
+      `${CUID_REQUEST_URL}/queue/qrcode`
       const response = await axios.get(
         `${CUID_REQUEST_URL}/queue/qrcode`
       );
+      console.log(response.data.token);
       setQrCode(response.data.qrCode);
     } catch (error) {
+      if (isAxiosError(error) && error.response) {
+        console.log(error.response.data, error.response.status);
+      }
       alert((error as Error).message);
     }
   };
 
   useEffect(() => {
-    const scanCountRef = ref(realtimeDb, "scan-count");
     fetchQRCode();
-    goOnline(realtimeDb);
-    const unsubscribe = onValue(scanCountRef, () => {
+    const currentQueueNumberRef = ref(realtimeDb, "current-queue-number");
+    const unsubscribe = onValue(currentQueueNumberRef, () => {
       fetchQRCode();
     });
-    return () => {
-      unsubscribe();
-      goOffline(realtimeDb);
-    };
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -65,12 +68,7 @@ const QRCodeScreen = () => {
             }}
           >
             <View style={{ borderColor: "#0077B6", borderWidth: wp(0.5) }}>
-              <Image
-                source={{
-                  uri: qrCode,
-                }}
-                style={{ width: 200, height: 200 }}
-              />
+              <SvgXml xml={qrCode} style={{ height: hp(30), width: wp(60) }} />
             </View>
           </View>
         ) : (

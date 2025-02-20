@@ -3,6 +3,7 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import queueRoutes from "./routers/queueRoutes";
 import cors from "cors";
+import "./services/realtimeDatabaseService";
 
 dotenv.config();
 const app: Express = express();
