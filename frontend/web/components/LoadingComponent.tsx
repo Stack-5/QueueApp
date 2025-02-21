@@ -11,12 +11,12 @@ const LoadingComponent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
-  const { setQueueID, setToken } = useQueueContext();
+  const { setQueueNumber, setToken } = useQueueContext();
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     processQueueInformation();
-  }, [router, searchParams, setQueueID, setToken, token]);
+  }, [router, searchParams, setQueueNumber, setToken, token]);
 
   const processQueueInformation = async () => {
     if (!token) {
@@ -26,15 +26,19 @@ const LoadingComponent = () => {
 
     try {
       const decodedToken = jwtDecode<DecodedToken>(token);
-      const queueNumber = decodedToken.queueNumber; 
+      const queueNumber = decodedToken.queueNumber;
 
       if (queueNumber) {
-        setQueueID(queueNumber);
+        setQueueNumber(queueNumber);
         setToken(token);
+
+        localStorage.setItem("queueNumber", queueNumber.toString());
+        localStorage.setItem("token", token);
+
         setFadeOut(true);
 
         setTimeout(() => {
-          router.replace("/form"); 
+          router.replace("/form");
         }, 500);
       } else {
         console.error("[LoadingComponent] Queue number is not available in token.");

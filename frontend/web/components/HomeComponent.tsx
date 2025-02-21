@@ -9,13 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const { queueID, token } = useQueueContext(); 
+  const { queueNumber, token } = useQueueContext();
   const [fadeIn, setFadeIn] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -24,14 +24,14 @@ const HomeComponent = () => {
     setTimeout(() => setFadeIn(true), 100);
   }, []);
 
-  const getQueueIDWithPrefix = (queueID: number, purpose: string) => {
-    if (!purpose) return queueID.toString(); 
+  const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
+    if (!purpose) return queueNumber.toString(); 
     const prefix = purpose.substring(0, 1).toUpperCase();
-    return `${prefix}${queueID.toString().padStart(3, "0")}`;
+    return `${prefix}${queueNumber.toString().padStart(3, "0")}`;
   };
 
   const handleSubmit = async () => {
-    if (!purpose || !phoneNumber || !queueID) {
+    if (!purpose || !phoneNumber || !queueNumber) {
       setAlertMessage("Please fill out all fields.");
       setIsAlertOpen(true);
       return;
@@ -40,7 +40,7 @@ const HomeComponent = () => {
     setLoading(true);
 
     try {
-      await submitForm(queueID, purpose, phoneNumber, token);
+      await submitForm(queueNumber, purpose, phoneNumber, token);
       setAlertMessage("Form submitted successfully!");
     } catch {
       setAlertMessage("Failed to submit form. Please try again.");
@@ -61,18 +61,20 @@ const HomeComponent = () => {
       </h1>
       <p className="text-gray-650 mt-2 text-center font-bold">Thank you for scanning!</p>
       <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-        This system helps manage queues efficiently, allowing you to join a virtual line without waiting physically. You’ll receive an SMS notification when it’s your turn. You only have to wait{" "}
-        <span className="text-red-500 font-bold">a couple of minutes</span> at most for you to be served at the cashier.⏳
+        This system helps manage queues efficiently, allowing you to join a virtual line without waiting physically. You’ll receive an SMS notification when it’s your turn. 
+        You only have to wait <span className="text-red-500 font-bold">a couple of minutes</span> at most for you to be served at the cashier.⏳
       </p>
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your queue ID is&nbsp;
+        Your queue number is&nbsp;
         <span className="font-bold">
-          {queueID ? `#${getQueueIDWithPrefix(queueID, purpose)}` : "..."}
+          {queueNumber ? `#${getQueueNumberWithPrefix(queueNumber, purpose)}` : "..."}
         </span>.
       </h2>
 
-      <p className="text-gray-600 mt-2 text-center">Please wait for an SMS notification, which will be sent to you shortly.</p>
+      <p className="text-gray-600 mt-2 text-center">
+        Please wait for an SMS notification, which will be sent to you shortly.
+      </p>
 
       <Card className="w-[350px] mt-6">
         <CardHeader>
@@ -119,7 +121,9 @@ const HomeComponent = () => {
         </CardFooter>
       </Card>
 
-      <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">Remember to always check your notifications. Thank you!</p>
+      <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
+        Remember to always check your notifications. Thank you!
+      </p>
 
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
