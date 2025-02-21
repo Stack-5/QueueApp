@@ -15,7 +15,7 @@ const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const { queueID, token } = useQueueContext(); // access queueID and token from context
+  const { queueID, token } = useQueueContext(); 
   const [fadeIn, setFadeIn] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -23,6 +23,12 @@ const HomeComponent = () => {
   useEffect(() => {
     setTimeout(() => setFadeIn(true), 100);
   }, []);
+
+  const getQueueIDWithPrefix = (queueID: number, purpose: string) => {
+    if (!purpose) return queueID.toString(); 
+    const prefix = purpose.substring(0, 1).toUpperCase();
+    return `${prefix}${queueID.toString().padStart(3, "0")}`;
+  };
 
   const handleSubmit = async () => {
     if (!purpose || !phoneNumber || !queueID) {
@@ -34,7 +40,7 @@ const HomeComponent = () => {
     setLoading(true);
 
     try {
-      await submitForm(queueID, purpose, phoneNumber, token); 
+      await submitForm(queueID, purpose, phoneNumber, token);
       setAlertMessage("Form submitted successfully!");
     } catch {
       setAlertMessage("Failed to submit form. Please try again.");
@@ -61,7 +67,9 @@ const HomeComponent = () => {
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
         Your queue ID is&nbsp;
-        <span className="font-bold">{`#${queueID || "..."}`}</span>.
+        <span className="font-bold">
+          {queueID ? `#${getQueueIDWithPrefix(queueID, purpose)}` : "..."}
+        </span>.
       </h2>
 
       <p className="text-gray-600 mt-2 text-center">Please wait for an SMS notification, which will be sent to you shortly.</p>

@@ -1,15 +1,11 @@
 "use client";
 
 import { useQueueContext } from "@/context/QueueContext";
-
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {jwtDecode} from "jwt-decode"; 
+import { jwtDecode, JwtPayload } from "jwt-decode"; 
 
-// Don't wanna make another file type for this one, so I'll just hard code it here
-interface DecodedToken {
-  queueNumber: string;
-}
+type DecodedToken = JwtPayload & { queueNumber: number };
 
 const LoadingComponent = () => {
   const searchParams = useSearchParams();
@@ -19,35 +15,35 @@ const LoadingComponent = () => {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const fetchQueueID = async () => {
-      if (!token) {
-        console.error("[LoadingComponent] Token is missing.");
-        return;
-      }
-
-      try {
-        const decodedToken = jwtDecode<DecodedToken>(token);
-        const queueNumber = decodedToken.queueNumber; 
-
-        if (queueNumber) {
-          setQueueID(queueNumber);  
-          setToken(token);           
-          setFadeOut(true);
-
-          setTimeout(() => {
-            router.replace("/form"); 
-          }, 500);
-        } else {
-          console.error("[LoadingComponent] Queue number is not available in token.");
-        }
-      } catch (error) {
-        console.error("[LoadingComponent] Error decoding token:", error);
-        router.replace("/error/unauthorized");
-      }
-    };
-
-    fetchQueueID();
+    processQueueInformation();
   }, [router, searchParams, setQueueID, setToken, token]);
+
+  const processQueueInformation = async () => {
+    if (!token) {
+      console.error("[LoadingComponent] Token is missing.");
+      return;
+    }
+
+    try {
+      const decodedToken = jwtDecode<DecodedToken>(token);
+      const queueNumber = decodedToken.queueNumber; 
+
+      if (queueNumber) {
+        setQueueID(queueNumber);
+        setToken(token);
+        setFadeOut(true);
+
+        setTimeout(() => {
+          router.replace("/form"); 
+        }, 500);
+      } else {
+        console.error("[LoadingComponent] Queue number is not available in token.");
+      }
+    } catch (error) {
+      console.error("[LoadingComponent] Error decoding token:", error);
+      router.replace("/error/unauthorized");
+    }
+  };
 
   return (
     <div
