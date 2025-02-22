@@ -3,13 +3,36 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import notifyQueue from "@/utils/notifyQueue";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
@@ -21,11 +44,14 @@ const HomeComponent = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setFadeIn(true), 100);
+    const timeoutId = setTimeout(() => setFadeIn(true), 100);
+    notifyQueue(token);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
-    if (!purpose) return queueNumber.toString(); 
+    if (!purpose) return queueNumber.toString();
     const prefix = purpose.substring(0, 1).toUpperCase();
     return `${prefix}${queueNumber.toString().padStart(3, "0")}`;
   };
@@ -59,17 +85,25 @@ const HomeComponent = () => {
       <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
         NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
       </h1>
-      <p className="text-gray-650 mt-2 text-center font-bold">Thank you for scanning!</p>
+      <p className="text-gray-650 mt-2 text-center font-bold">
+        Thank you for scanning!
+      </p>
       <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-        This system helps manage queues efficiently, allowing you to join a virtual line without waiting physically. You’ll receive an SMS notification when it’s your turn. 
-        You only have to wait <span className="text-red-500 font-bold">a couple of minutes</span> at most for you to be served at the cashier.⏳
+        This system helps manage queues efficiently, allowing you to join a
+        virtual line without waiting physically. You’ll receive an SMS
+        notification when it’s your turn. You only have to wait{" "}
+        <span className="text-red-500 font-bold">a couple of minutes</span> at
+        most for you to be served at the cashier.⏳
       </p>
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
         Your queue number is&nbsp;
         <span className="font-bold">
-          {queueNumber ? `#${getQueueNumberWithPrefix(queueNumber, purpose)}` : "..."}
-        </span>.
+          {queueNumber
+            ? `#${getQueueNumberWithPrefix(queueNumber, purpose)}`
+            : "..."}
+        </span>
+        .
       </h2>
 
       <p className="text-gray-600 mt-2 text-center">
@@ -79,7 +113,9 @@ const HomeComponent = () => {
       <Card className="w-[350px] mt-6">
         <CardHeader>
           <CardTitle>Required section</CardTitle>
-          <CardDescription>To proceed, please enter your SMS details.</CardDescription>
+          <CardDescription>
+            To proceed, please enter your SMS details.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid w-full items-center gap-4">
@@ -116,7 +152,11 @@ const HomeComponent = () => {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Submitting..." : <span className="font-bold">Submit</span>}
+            {loading ? (
+              "Submitting..."
+            ) : (
+              <span className="font-bold">Submit</span>
+            )}
           </Button>
         </CardFooter>
       </Card>
@@ -132,7 +172,9 @@ const HomeComponent = () => {
             <AlertDialogDescription>{alertMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>OK</AlertDialogAction>
+            <AlertDialogAction onClick={() => setIsAlertOpen(false)}>
+              OK
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
