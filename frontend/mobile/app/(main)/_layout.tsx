@@ -22,6 +22,7 @@ const MainLayout = () => {
       <Stack.Screen name="qrcode" />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="default/pending" options={{ headerShown: false }} />
+      <Stack.Screen name="admin/settings" options={{ headerShown: false }}/>
     </Stack>
   );
 };

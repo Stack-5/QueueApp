@@ -34,9 +34,9 @@ const MainMenuScreen = () => {
         {userInfo?.role === "information" ? (
           <NeuMainMenuButton
             title="Settings"
-            buttonFn={() => {
+            buttonFn={() => { 
               router.push("/settings");
-            }}
+            }} 
           />
         ) : (
           <>
@@ -53,7 +53,12 @@ const MainMenuScreen = () => {
             <NeuMainMenuButton
               title="Settings"
               buttonFn={() => {
-                router.push("/settings");
+                if(userInfo?.role==="admin"){
+                  router.push("admin/settings");
+                } else { 
+                  router.push("/settings");
+                }
+               
               }}
             />
           </>
