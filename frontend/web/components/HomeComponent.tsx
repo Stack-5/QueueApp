@@ -44,11 +44,21 @@ const HomeComponent = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => setFadeIn(true), 100);
-    notifyQueue(token);
+  const timeoutId = setTimeout(() => setFadeIn(true), 100);
 
-    return () => clearTimeout(timeoutId);
-  }, []);
+    const fetchQueueNotification = async () => {
+    console.log(token);
+    try {
+      await notifyQueue(token);
+    } catch (error) {
+      console.error("Failed to notify queue:", error);
+    }
+  };
+
+  fetchQueueNotification(); 
+
+  return () => clearTimeout(timeoutId);
+}, []);
 
   const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
     if (!purpose) return queueNumber.toString();
