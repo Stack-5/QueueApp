@@ -29,7 +29,7 @@ module.exports = {
     "import/no-unresolved": 0,
     "indent": ["error", 2],
     "linebreak-style": ["error", "unix"],
-    "max-len": ["error", { "code": 100 }],
+    "max-len": ["error", { "code": 120}],
     "object-curly-spacing": "off",
   },
 };

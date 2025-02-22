@@ -1,7 +1,7 @@
 import { JwtPayload } from "jsonwebtoken";
 import { Request } from "express";
 
-interface QueueRequest extends Request {
+type QueueRequest = Request & {
   id?: string | JwtPayload;
   token?: string;
 }
