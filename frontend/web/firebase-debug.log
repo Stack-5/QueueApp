@@ -1,0 +1,22 @@
+[debug] [2025-02-22T14:27:58.145Z] ----------------------------------------------------------------------
+[debug] [2025-02-22T14:27:58.150Z] Command:       /usr/bin/node-22 /usr/local/bin/firebase deploy
+[debug] [2025-02-22T14:27:58.152Z] CLI Version:   13.31.1
+[debug] [2025-02-22T14:27:58.152Z] Platform:      linux
+[debug] [2025-02-22T14:27:58.152Z] Node Version:  v22.11.0
+[debug] [2025-02-22T14:27:58.153Z] Time:          Sat Feb 22 2025 22:27:58 GMT+0800 (Philippine Standard Time)
+[debug] [2025-02-22T14:27:58.153Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-02-22T14:27:58.609Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-02-22T14:27:58.610Z] > authorizing via signed-in user (petracorta.rmnl@gmail.com)
+[debug] [2025-02-22T14:27:58.611Z] [iam] checking project retchizu-94b36 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-02-22T14:27:58.618Z] Checked if tokens are valid: true, expires at: 1740237817102
+[debug] [2025-02-22T14:27:58.618Z] Checked if tokens are valid: true, expires at: 1740237817102
+[debug] [2025-02-22T14:27:58.620Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/retchizu-94b36:testIamPermissions [none]
+[debug] [2025-02-22T14:27:58.621Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/retchizu-94b36:testIamPermissions x-goog-quota-user=projects/retchizu-94b36
+[debug] [2025-02-22T14:27:58.621Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/retchizu-94b36:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-02-22T14:27:59.578Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/retchizu-94b36:testIamPermissions 200
+[debug] [2025-02-22T14:27:59.579Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/retchizu-94b36:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-02-22T14:27:59.580Z] Checked if tokens are valid: true, expires at: 1740237817102
+[debug] [2025-02-22T14:27:59.580Z] Checked if tokens are valid: true, expires at: 1740237817102
+[debug] [2025-02-22T14:27:59.581Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/retchizu-94b36 [none]
+[debug] [2025-02-22T14:27:59.919Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/retchizu-94b36 200

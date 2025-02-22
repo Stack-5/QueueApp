@@ -10,8 +10,9 @@ const FormPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!token?.trim()) {
-      router.replace("/error/unauthorized");
+    if (token && token.length === 0) {
+      // router.replace("/error/unauthorized");
+      console.log(token);
     }
   }, [token, router]);
 

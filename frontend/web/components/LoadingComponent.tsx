@@ -14,10 +14,6 @@ const LoadingComponent = () => {
   const { setQueueNumber, setToken } = useQueueContext();
   const [fadeOut, setFadeOut] = useState(false);
 
-  useEffect(() => {
-    processQueueInformation();
-  }, [router, searchParams, setQueueNumber, setToken, token]);
-
   const processQueueInformation = async () => {
     if (!token) {
       console.error("[LoadingComponent] Token is missing.");
@@ -40,6 +36,8 @@ const LoadingComponent = () => {
         setTimeout(() => {
           router.replace("/form");
         }, 500);
+
+        console.log("[LoadingComponent] Decoded token:", decodedToken);
       } else {
         console.error("[LoadingComponent] Queue number is not available in token.");
       }
@@ -48,6 +46,11 @@ const LoadingComponent = () => {
       router.replace("/error/unauthorized");
     }
   };
+
+  useEffect(() => {
+    console.log("test");
+    processQueueInformation();
+  }, [router, searchParams, setQueueNumber, setToken, token]);
 
   return (
     <div

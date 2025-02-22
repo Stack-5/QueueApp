@@ -8,7 +8,7 @@ type DecodedToken = JwtPayload & { queueNumber: number };
 
 const QueueContext = createContext<QueueContextType | undefined>(undefined);
 
-function QueueProvider({ children }: { children: ReactNode }) {
+const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
   const [queueNumber, setQueueNumber] = useState<number>(0);
   const [token, setToken] = useState<string | null>(null);
 
@@ -51,7 +51,7 @@ function QueueProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function useQueueContext(): QueueContextType {
+const useQueueContext = (): QueueContextType => {
   const context = useContext(QueueContext);
   if (!context) {
     throw new Error("useQueueContext must be used within a QueueProvider");
