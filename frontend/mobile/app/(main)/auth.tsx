@@ -7,17 +7,19 @@ import { ANDROID_CLIENT_ID, WEB_CLIENT_ID } from "@env";
 import { useState } from "react";
 import { useGoogleSignIn } from "../../hooks/useGoogleSignIn";
 import { useAuthStateListenerSignIn } from "../../hooks/useSignInAuthStateListener";
+import { makeRedirectUri } from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
 const SignInScreen = () => {
     const [request, response, promptasync] = Google.useAuthRequest({
       webClientId:WEB_CLIENT_ID,
       androidClientId:ANDROID_CLIENT_ID,
+      redirectUri: makeRedirectUri({scheme:"com.retchizu.neuqueue", path:"/auth"})
     })
   
     const [googleButtonLoading, setGoogleButtonLoading] = useState(false);
-    useGoogleSignIn(response, setGoogleButtonLoading)
-    useAuthStateListenerSignIn();
+    const {isVerified} = useGoogleSignIn(response, setGoogleButtonLoading)
+    useAuthStateListenerSignIn(isVerified);
 
 
   return (

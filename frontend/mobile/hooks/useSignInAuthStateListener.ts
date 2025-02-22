@@ -2,16 +2,25 @@ import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { router } from "expo-router";
+import { useUserContext } from "../contexts/UserContext";
 
-export const useAuthStateListenerSignIn = (
-  
-) => {
+export const useAuthStateListenerSignIn = (isVerified: boolean) => {
+  const { userInfo } = useUserContext();
   useEffect(() => {
+    if (!isVerified) {
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.replace("/menu");
+        const employeeRole = ["admin", "cashier", "information"];
+        if (userInfo?.role === "pending") {
+          router.replace("/default/pending");
+        } else if (employeeRole.includes(userInfo?.role!)) {
+          router.replace("/menu");
+        }
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isVerified]);
 };
