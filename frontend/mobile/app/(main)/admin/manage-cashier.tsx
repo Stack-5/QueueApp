@@ -3,7 +3,7 @@ import React from 'react'
 
 const ManageUserScreen = () => {
   return (
-    <View>
+    <View style={{}}>
       <Text>ManageUserScreen</Text>
     </View>
   )
