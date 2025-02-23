@@ -26,29 +26,53 @@ import { useQueueContext } from "@/context/QueueContext";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import notifyQueue from "@/utils/notifyQueue";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
-  const { queueID, token } = useQueueContext();
+  const { queueNumber, token } = useQueueContext();
   const [fadeIn, setFadeIn] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setFadeIn(true), 100);
+    const fetchQueueNotification = async () => {
+      if (!token) {
+        console.warn("[HomeComponent] Token not available yet.");
+        return;
+      }
+
+      try {
+        await notifyQueue(token);
+      } catch (error) {
+        console.error("Failed to notify queue:", error);
+      }
+    };
+    fetchQueueNotification();
+  }, [token]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => setFadeIn(true), 100);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
+  const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
+    if (!purpose) return queueNumber.toString();
+    const prefix = purpose.substring(0, 1).toUpperCase();
+    return `${prefix}${queueNumber.toString().padStart(3, "0")}`;
+  };
+
   const handleSubmit = async () => {
-    if (!purpose || !phoneNumber || !queueID) {
+    if (!purpose || !phoneNumber || !queueNumber) {
       setAlertMessage("Please fill out all fields.");
       setIsAlertOpen(true);
       return;
@@ -57,7 +81,7 @@ const HomeComponent = () => {
     setLoading(true);
 
     try {
-      await submitForm(queueID, purpose, phoneNumber, token);
+      await submitForm(queueNumber, purpose, phoneNumber, token);
       setAlertMessage("Form submitted successfully!");
     } catch {
       setAlertMessage("Failed to submit form. Please try again.");
@@ -88,8 +112,13 @@ const HomeComponent = () => {
       </p>
 
       <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your queue ID is&nbsp;
-        <span className="font-bold">{`#${queueID || "..."}`}</span>.
+        Your queue number is&nbsp;
+        <span className="font-bold">
+          {queueNumber
+            ? `#${getQueueNumberWithPrefix(queueNumber, purpose)}`
+            : "..."}
+        </span>
+        .
       </h2>
 
       <p className="text-gray-600 mt-2 text-center">
@@ -138,7 +167,11 @@ const HomeComponent = () => {
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Submitting..." : <span className="font-bold">Submit</span>}
+            {loading ? (
+              "Submitting..."
+            ) : (
+              <span className="font-bold">Submit</span>
+            )}
           </Button>
         </CardFooter>
       </Card>

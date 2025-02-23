@@ -1,56 +1,56 @@
 "use client";
 
 import { useQueueContext } from "@/context/QueueContext";
-import notifyQueue from "@/utils/notifyQueue";
-import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { jwtDecode, JwtPayload } from "jwt-decode"; 
+
+type DecodedToken = JwtPayload & { queueNumber: number };
 
 const LoadingComponent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
-  const { setQueueID, setToken } = useQueueContext();
+  const { setQueueNumber, setToken } = useQueueContext();
   const [fadeOut, setFadeOut] = useState(false);
 
-  useEffect(() => {
-    const fetchQueueID = async () => {
-      const queueUrl =
-        "http://127.0.0.1:5001/retchizu-94b36/us-central1/neu/queue/current";
+  const processQueueInformation = async () => {
+    if (!token) {
+      console.error("[LoadingComponent] Token is missing.");
+      return;
+    }
 
-      try {
-        const response = await axios.get(queueUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    try {
+      const decodedToken = jwtDecode<DecodedToken>(token);
+      const queueNumber = decodedToken.queueNumber;
 
-        if (response.data.queueID) {
-          setQueueID(response.data.queueID);
-          setToken(token);
-          await notifyQueue(token);
+      if (queueNumber) {
+        setQueueNumber(queueNumber);
+        setToken(token);
 
-          setFadeOut(true);
+        localStorage.setItem("queueNumber", queueNumber.toString());
+        localStorage.setItem("token", token);
 
-          setTimeout(() => {
-            router.replace("/form");
-          }, 500);
-        }
-      } catch (error) {
-        console.error("[LoadingComponent] Error fetching queue ID:", error);
+        setFadeOut(true);
 
-        if (axios.isAxiosError(error) && error.response) {
-          if (error.response.status === 401) {
-            router.replace("/error/unauthorized");
-          } else if (error.response.status === 500) {
-            router.replace("/error/internal-server-error");
-          }
-        }
+        setTimeout(() => {
+          router.replace("/form");
+        }, 500);
+
+        console.log("[LoadingComponent] Decoded token:", decodedToken);
+      } else {
+        console.error("[LoadingComponent] Queue number is not available in token.");
       }
-    };
+    } catch (error) {
+      console.error("[LoadingComponent] Error decoding token:", error);
+      router.replace("/error/unauthorized");
+    }
+  };
 
-    fetchQueueID();
-  }, [router, searchParams, setQueueID, setToken, token]);
+  useEffect(() => {
+    console.log("test");
+    processQueueInformation();
+  }, [router, searchParams, setQueueNumber, setToken, token]);
 
   return (
     <div
@@ -60,9 +60,7 @@ const LoadingComponent = () => {
     >
       <div className="w-12 h-12 border-4 border-gray-300 border-t-[#FFBF00] rounded-full animate-spin mb-6"></div>
       <h2 className="text-xl font-semibold text-gray-700">Fetching your queue...</h2>
-      <p className="text-sm text-gray-500 mt-2">
-        Please wait while we get your spot in line.
-      </p>
+      <p className="text-sm text-gray-500 mt-2">Please wait while we get your spot in line.</p>
     </div>
   );
 };
