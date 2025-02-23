@@ -1,9 +1,9 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import NeuQueueButton from '../../../components/NeuQueueButton'
 import { auth } from '../../../firebaseConfig'
 import { useSignOutAuthStateListener } from '../../../hooks/useSignOutAuthStateListener'
 import { useUserContext } from '../../../contexts/UserContext'
+import NeuQueueButtonYellow from '../../../components/NeuQueueButtonYellow'
 
 const PendingScreen = () => {
   const {userInfo} = useUserContext();
@@ -12,7 +12,7 @@ const PendingScreen = () => {
   return (
     <View>
       <Text>Admin is reviewing your account</Text>
-      <NeuQueueButton title="Sign Out" buttonFn={async() => await auth.signOut()}/>
+      <NeuQueueButtonYellow title="Sign Out" buttonFn={async() => await auth.signOut()}/>
     </View>
   )
 }

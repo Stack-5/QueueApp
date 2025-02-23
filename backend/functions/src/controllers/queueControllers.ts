@@ -66,11 +66,21 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
 export const incrementScanCountOnSuccess = async (req: QueueRequest, res: Response) => {
   try {
     if (req.token) {
+      const {timestamp} : {timestamp:number} = req.body;
+      const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token);
+      const usedToken = await usedTokenRef.get();
+      if (usedToken.exists) {
+        res.status(200).json({message: "Token is already in use"});
+        return;
+      }
+      await usedTokenRef.set({
+        timestamp: timestamp,
+      });
       const currentQueueNumberRef = realtimeDb.ref("current-queue-number");
       await currentQueueNumberRef.transaction((currentValue) => {
         return (currentValue || 0) + 1;
       });
-      res.status(200).json({message: "success"});
+      res.status(200).json({message: "Queue number incremented successfully"});
     } else {
       res.status(401).json({message: "Invalid or missing token"});
     }

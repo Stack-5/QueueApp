@@ -3,8 +3,10 @@ import User from "../types/user";
 
 type UserContextType = {
   userInfo:User | null;
-  setUserInfo: Dispatch<SetStateAction<User | null>>
-  allowedRoles: string[]
+  setUserInfo: Dispatch<SetStateAction<User | null>>;
+  allowedRoles: string[];
+  userToken: string;
+  setUserToken: Dispatch<SetStateAction<string>>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -12,10 +14,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{children: ReactNode}> = ({children}) => {
 
   const [userInfo, setUserInfo] = useState<User| null>(null);
+  const [userToken, setUserToken] = useState("")
   const allowedRoles = ["admin", "cashier", "information"];
 
   return (
-    <UserContext.Provider value={{userInfo, setUserInfo, allowedRoles}}>
+    <UserContext.Provider value={{userInfo, setUserInfo, allowedRoles, userToken, setUserToken}}>
       {children}
     </UserContext.Provider>
   )
