@@ -1,10 +1,12 @@
 import { View } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
-import { router } from "expo-router";
 import NeuQueueLogo from "../components/NeuQueueLogo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAutoSignInStateListener } from "../hooks/useAutoSignInStateListener";
 
 const SplashScreen = () => {
+  const [isVerified, setIsVerified] = useState<boolean>(false);
   const [loaded, error] = useFonts({
     lexendblack: require("../assets/fonts/Lexend-Black.ttf"),
     lexendbold: require("../assets/fonts/Lexend-Bold.ttf"),
@@ -18,14 +20,26 @@ const SplashScreen = () => {
   });
 
   useEffect(() => {
-    if (loaded) {
-      setTimeout(() => router.replace("/auth"), 300);
-    }
-  }, [loaded]);
+    const fetchIsVerified = async () => {
+      try {
+        const isVerified = await AsyncStorage.getItem("isverified");
+        setIsVerified(isVerified === "true"); // Store in state
+      } catch (error) {
+        console.error("Error fetching verification status:", error);
+      }
+    };
+
+    fetchIsVerified();
+  }, []);
+  
+
+  useAutoSignInStateListener(loaded, isVerified);
+
 
   if (!loaded && !error) {
     return null;
   }
+
   return (
     <View
       style={{

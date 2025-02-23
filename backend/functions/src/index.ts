@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import queueRoutes from "./routers/queueRoutes";
 import cors from "cors";
 import "./services/realtimeDatabaseService";
+import authRoutes from "./routers/authRoutes";
 
 dotenv.config();
 const app: Express = express();
@@ -28,6 +29,7 @@ app.get("/", (req:Request, res:Response) => {
 });
 
 app.use("/queue", queueRoutes);
+app.use("/auth", authRoutes);
 
 export const neu = v2.https.onRequest(app);
 

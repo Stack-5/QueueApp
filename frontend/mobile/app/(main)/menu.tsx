@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import NeuMainMenuButton from "../../components/NeuQueueMainMenuButton";
 import {
   heightPercentageToDP as hp,
@@ -7,8 +7,13 @@ import {
 } from "react-native-responsive-screen";
 import { router } from "expo-router";
 import NeuQueueLogo from "../../components/NeuQueueLogo";
+import { useUserContext } from "../../contexts/UserContext";
 
 const MainMenuScreen = () => {
+  const { userInfo } = useUserContext();
+
+  console.log(userInfo);
+
   return (
     <View
       style={{
@@ -25,17 +30,43 @@ const MainMenuScreen = () => {
         }}
       />
       <View style={{ paddingHorizontal: wp(10) }}>
-        <NeuMainMenuButton
-          title="Enter Cashier"
-          buttonFn={() => {
-            router.replace("/main");
-          }}
-        />
-        <NeuMainMenuButton
-          title="Display QR Code"
-          buttonFn={() => router.push("/qrcode")}
-        />
-        <NeuMainMenuButton title="Settings" buttonFn={() => {}} />
+        {userInfo?.role === "information" ? (
+          <>
+            <NeuMainMenuButton
+              title="Display QR Code"
+              buttonFn={() => router.push("/qrcode")}
+            />
+            <NeuMainMenuButton
+              title="Settings"
+              buttonFn={() => {
+                router.push("information/settings");
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <NeuMainMenuButton
+              title="Enter Cashier"
+              buttonFn={() => {
+                router.push("/main");
+              }}
+            />
+            <NeuMainMenuButton
+              title="Display QR Code"
+              buttonFn={() => router.push("/qrcode")}
+            />
+            <NeuMainMenuButton
+              title="Settings"
+              buttonFn={() => {
+                if (userInfo?.role === "admin") {
+                  router.push("admin/settings");
+                } else if (userInfo?.role === "cashier") {
+                  router.push("cashier/settings");
+                }
+              }}
+            />
+          </>
+        )}
       </View>
     </View>
   );

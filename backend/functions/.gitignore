@@ -10,4 +10,5 @@ node_modules/
 *.local
 .env
 serviceAccountKey.json
+
 assign.js

@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import React, { useState } from "react";
-import NeuQueueButton from "../../components/NeuQueueButton";
+import { useState } from "react";
 import ServeButton from "../../components/ServeButton";
 import { CustomerMode } from "../../types/mode";
 import {
@@ -8,8 +7,8 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { router } from "expo-router";
-import NeuQueueMainMenuButton from "../../components/NeuQueueMainMenuButton";
 import NeuQueueSmallButton from "../../components/NeuQueueSmallButton";
+import NeuQueueButtonYellow from "../../components/NeuQueueButtonYellow";
 
 const QueueScreen = () => {
   const [customerMode, setCustomerMode] = useState<CustomerMode>("Payment");
@@ -70,9 +69,9 @@ const QueueScreen = () => {
           justifyContent: "space-evenly",
         }}
       >
-        <NeuQueueButton title="Notify Next Student" buttonFn={() => {}} />
-        <NeuQueueButton title="Notify Next 10 Student" buttonFn={() => {}} />
-        <NeuQueueButton title="Next" buttonFn={() => {}} />
+        <NeuQueueButtonYellow title="Notify Next Student" buttonFn={() => {}} />
+        <NeuQueueButtonYellow title="Notify Next 10 Student" buttonFn={() => {}} />
+        <NeuQueueButtonYellow title="Next" buttonFn={() => {}} />
       </View>
 
       <View
