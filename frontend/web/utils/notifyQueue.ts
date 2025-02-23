@@ -2,6 +2,7 @@ import axios from "axios";
 
 const apiURL = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
 
+
 const notifyQueue = async (token: string | null) => {
   if (!token) {
     console.error("[notifyQueue] Token is missing.");

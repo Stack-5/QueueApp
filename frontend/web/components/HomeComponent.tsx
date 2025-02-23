@@ -46,8 +46,12 @@ const HomeComponent = () => {
   useEffect(() => {
   const timeoutId = setTimeout(() => setFadeIn(true), 100);
 
-    const fetchQueueNotification = async () => {
-    console.log(token);
+  const fetchQueueNotification = async () => {
+    if (!token) {
+      console.warn("[HomeComponent] Token not available yet.");
+      return;
+    }
+
     try {
       await notifyQueue(token);
     } catch (error) {
@@ -55,10 +59,13 @@ const HomeComponent = () => {
     }
   };
 
-  fetchQueueNotification(); 
+  if (token) {
+    fetchQueueNotification();
+  }
 
   return () => clearTimeout(timeoutId);
-}, []);
+}, [token]); 
+
 
   const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
     if (!purpose) return queueNumber.toString();
