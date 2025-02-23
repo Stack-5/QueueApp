@@ -7,7 +7,6 @@ import {
 } from "react-native-responsive-screen";
 import { router } from "expo-router";
 import NeuQueueLogo from "../../components/NeuQueueLogo";
-import { auth } from "../../firebaseConfig";
 import { useUserContext } from "../../contexts/UserContext";
 
 const MainMenuScreen = () => {
@@ -32,18 +31,24 @@ const MainMenuScreen = () => {
       />
       <View style={{ paddingHorizontal: wp(10) }}>
         {userInfo?.role === "information" ? (
-          <NeuMainMenuButton
-            title="Settings"
-            buttonFn={() => { 
-              router.push("/settings");
-            }} 
-          />
+          <>
+            <NeuMainMenuButton
+              title="Display QR Code"
+              buttonFn={() => router.push("/qrcode")}
+            />
+            <NeuMainMenuButton
+              title="Settings"
+              buttonFn={() => {
+                router.push("information/settings");
+              }}
+            />
+          </>
         ) : (
           <>
             <NeuMainMenuButton
               title="Enter Cashier"
               buttonFn={() => {
-                router.replace("/main");
+                router.push("/main");
               }}
             />
             <NeuMainMenuButton
@@ -53,12 +58,11 @@ const MainMenuScreen = () => {
             <NeuMainMenuButton
               title="Settings"
               buttonFn={() => {
-                if(userInfo?.role==="admin"){
+                if (userInfo?.role === "admin") {
                   router.push("admin/settings");
-                } else { 
-                  router.push("/settings");
+                } else if (userInfo?.role === "cashier") {
+                  router.push("cashier/settings");
                 }
-               
               }}
             />
           </>

@@ -5,7 +5,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 
-const NeuQueueButton = ({ title, buttonFn }: CommonButtonProps) => {
+const NeuQueueButtonYellow = ({ title, buttonFn }: CommonButtonProps) => {
   return (
     <TouchableOpacity
       style={{
@@ -30,4 +30,4 @@ const NeuQueueButton = ({ title, buttonFn }: CommonButtonProps) => {
   );
 };
 
-export default NeuQueueButton;
+export default NeuQueueButtonYellow;

@@ -10,7 +10,7 @@ export const useAutoSignInStateListener = (
   isFontLoaded: boolean,
   isVerified: boolean
 ) => {
-  const { setUserInfo } = useUserContext();
+  const { setUserInfo, setUserToken} = useUserContext();
 
   useEffect(() => {
     if (!isFontLoaded) return;
@@ -27,6 +27,7 @@ export const useAutoSignInStateListener = (
         const employeeRole = ["admin", "cashier", "information"];
         if (response.data.user) {
           setUserInfo(response.data.user);
+          setUserToken(firebaseToken);
           
           const userRole = response.data.user.role;
           if (userRole === "pending") {

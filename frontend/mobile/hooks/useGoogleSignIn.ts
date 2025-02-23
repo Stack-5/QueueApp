@@ -11,7 +11,7 @@ export const useGoogleSignIn = (
   setGoogleLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const [isVerified, setIsVerified] = useState(false);
-  const { setUserInfo } = useUserContext();
+  const { setUserInfo, setUserToken } = useUserContext();
   const verifyAuthInformation = async (token: string) => {
     try {
       const credential = GoogleAuthProvider.credential(token);
@@ -21,6 +21,7 @@ export const useGoogleSignIn = (
       if (response.data.user) {
         setIsVerified(true);
         setUserInfo(response.data.user);
+        setUserToken(firebaseToken);
       }
     } catch (error) {
       if (isAxiosError(error) && error.response) {

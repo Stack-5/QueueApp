@@ -1,0 +1,29 @@
+import axios, { isAxiosError } from "axios";
+import EmployeeRole from "../../types/role";
+import { CUID_REQUEST_URL } from "@env";
+
+const assignRole = async (token: string, uid: string, role: EmployeeRole) => {
+  try {
+    const response = await axios.post(
+      `${CUID_REQUEST_URL}/auth/set-role`,
+      {
+        uid: uid,
+        role: role,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.log(error.response?.status, error.response?.data);
+    }
+    throw error;
+  }
+};
+
+export default assignRole;
