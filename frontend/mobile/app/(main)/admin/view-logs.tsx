@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  SectionList,
-} from "react-native";
+import { View, Text, TouchableOpacity, SectionList } from "react-native";
 import React from "react";
 import {
   heightPercentageToDP as hp,
@@ -19,34 +13,8 @@ const ViewLogs = () => {
   const router = useRouter();
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#F9FAFB", paddingHorizontal: wp(1) }}
+      style={{ flex: 1, backgroundColor: "#F9FAFB", paddingHorizontal: wp(1),}}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          padding: wp(4),
-          justifyContent: "center",
-          position: "relative",
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.push("/admin/settings")}
-          style={{ position: "absolute", left: wp(4) }}
-        >
-          <AntDesign name="left" size={24} color="#0077B6" />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontSize: wp(6),
-            color: "#FFBF00",
-            fontFamily: "lexendmedium",
-          }}
-        >
-          View Logs
-        </Text>
-      </View>
-
       <View
         style={{
           backgroundColor: "#F1F1F1",

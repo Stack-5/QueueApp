@@ -37,6 +37,11 @@ const AdminLayout = () => {
           }}
         />
         <Stack.Screen name="assign-role" />
+        <Stack.Screen name="view-logs" options={{ headerTitle: "View Logs" }} />
+        <Stack.Screen
+          name="manage-employees"
+          options={{ headerTitle: "Manage Employees" }}
+        />
       </Stack>
     </PendingUsersProvider>
   );
