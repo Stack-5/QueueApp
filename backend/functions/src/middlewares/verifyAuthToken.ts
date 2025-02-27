@@ -14,7 +14,10 @@ export const verifyAuthToken = async (req: AuthRequest, res: Response, next: Nex
     const decodedToken = await auth.verifyIdToken(token);
     const email = decodedToken.email ?? "";
     if (!email.endsWith("@neu.edu.ph")) {
-      res.status(403).json({ message: "Unauthorized email domain. Contact admin." });
+      auth.updateUser(decodedToken.uid, {
+        disabled: true,
+      });
+      res.status(403).json({ message: "Unauthorized email domain. Contact admin for more info." });
       return;
     }
     req.user = {...decodedToken, role: decodedToken.role};

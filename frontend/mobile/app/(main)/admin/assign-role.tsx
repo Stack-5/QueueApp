@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Modal } from "react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import User from "../../../types/user";
 import EmployeeRole from "../../../types/role";
@@ -9,10 +9,9 @@ import {
 } from "react-native-responsive-screen";
 import formateDate from "../../../methods/date/formatDate";
 import formatTime from "../../../methods/date/formatTime";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Entypo } from "@expo/vector-icons";
 import { chooseRole, options } from "../../../methods/roleOptions";
 import assignRole from "../../../methods/admin/assignRole";
-import { usePedingUsersContext } from "../../../contexts/PendingUsersContext";
 import { useUserContext } from "../../../contexts/UserContext";
 import NeuQueueButtonBlue from "../../../components/NeuQueueButtonBlue";
 
@@ -23,7 +22,6 @@ const AssignRoleScreen = () => {
     : null;
   const [selectedRole, setSelectedRole] = useState<EmployeeRole>("information");
   const [isRoleModalVisible, setIsRoleModalVisible] = useState(false);
-  const { setPendingUsers } = usePedingUsersContext();
   const { userToken } = useUserContext();
   const [approveLoading, setApproveLoading] = useState(false);
 
@@ -64,7 +62,7 @@ const AssignRoleScreen = () => {
           backgroundColor: "#F1F1F1",
           padding: wp(3),
           justifyContent: "space-between",
-          marginVertical: hp(2),
+          marginTop: hp(1),
         }}
         onPress={() => {
           setIsRoleModalVisible(true);
@@ -91,32 +89,25 @@ const AssignRoleScreen = () => {
         </Text>
         <AntDesign name="right" size={wp(6)} color="#0077B6" />
       </TouchableOpacity>
+      <View style={{ top: hp(10) }}>
+        <NeuQueueButtonBlue
+          title="Approve"
+          buttonFn={async () => {
+            try {
+              setApproveLoading(true);
+              await assignRole(userToken, parsedUser?.uid!, selectedRole);
+              alert(`assigned ${selectedRole} to ${parsedUser?.email}`);
+              router.back();
+            } catch (error) {
+              alert((error as Error).message);
+            } finally {
+              setApproveLoading(false);
+            }
+          }}
+          loading={approveLoading}
+        />
+      </View>
 
-      <NeuQueueButtonBlue
-        title="Approve"
-        buttonFn={async () => {
-          try {
-            setApproveLoading(true);
-            const response = await assignRole(
-              userToken,
-              parsedUser?.uid!,
-              selectedRole
-            );
-            console.log(response);
-
-            setPendingUsers((prev) =>
-              prev.filter((user) => user.uid !== parsedUser?.uid)
-            );
-            alert(`assigned ${selectedRole} to ${parsedUser?.email}`);
-            router.back();
-          } catch (error) {
-            alert((error as Error).message);
-          }finally{
-            setApproveLoading(false)
-          }
-        }}
-        loading={approveLoading}
-      />
       <Modal
         transparent
         visible={isRoleModalVisible}
@@ -143,6 +134,13 @@ const AssignRoleScreen = () => {
               elevation: 5,
             }}
           >
+            <TouchableOpacity
+              style={{  borderBottomWidth:wp(0.5), alignItems:"flex-end", borderColor:"#F1F1F1"}}
+              onPress={() => setIsRoleModalVisible(false)}
+              activeOpacity={0.7}
+            >
+              <Entypo name="cross" size={wp(10)} color={"#F9FAFB"}/>
+            </TouchableOpacity>
             {options.map((option) => (
               <TouchableOpacity
                 key={option.key}

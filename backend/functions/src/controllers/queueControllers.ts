@@ -48,12 +48,14 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
         customerStatus: "pending",
         timestamp: timestamp,
       });
+
+      const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token);
+      await usedTokenRef.delete();
       const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(req.token);
       await invalidTokenRef.set({
         cellphoneNumber: cellphoneNumber,
         timestamp: timestamp,
       });
-
       res.status(201).json({message: "Added Successfully"});
     } else {
       res.status(401).json({message: "Invalid or missing token"});

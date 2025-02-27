@@ -2,11 +2,9 @@ import { AntDesign } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { widthPercentageToDP as wp } from "react-native-responsive-screen";
-import { PendingUsersProvider } from "../../../contexts/PendingUsersContext";
 
 const AdminLayout = () => {
   return (
-    <PendingUsersProvider>
       <Stack
         screenOptions={{
           headerTitleAlign: "center",
@@ -43,7 +41,6 @@ const AdminLayout = () => {
           options={{ headerTitle: "Manage Employees" }}
         />
       </Stack>
-    </PendingUsersProvider>
   );
 };
 

@@ -22,13 +22,13 @@ export const useAutoSignInStateListener = (
       }
 
       try {
-        const firebaseToken = await getIdToken(user);
+        const firebaseToken = await getIdToken(user, true);
         const response = await verifyAccountRequest(firebaseToken);
+        console.dir(JSON.stringify(response.data), {depth: null});
         const employeeRole = ["admin", "cashier", "information"];
         if (response.data.user) {
           setUserInfo(response.data.user);
           setUserToken(firebaseToken);
-          
           const userRole = response.data.user.role;
           if (userRole === "pending") {
             router.replace("/default/pending");
