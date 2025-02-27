@@ -4,57 +4,36 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback} from "react";
 import NeuQueueSearchBar from "../../../components/NeuQueueSearchBar";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-import axios, { isAxiosError } from "axios";
-import { useUserContext } from "../../../contexts/UserContext";
 import User from "../../../types/user";
 import formatDate from "../../../methods/date/formatDate";
 import formatTime from "../../../methods/date/formatTime";
 import { AntDesign } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { usePedingUsersContext } from "../../../contexts/PendingUsersContext";
-import { CUID_REQUEST_URL } from "@env";
+import { useGetPendingUsers } from "../../../hooks/data-fetching-hooks/useGetPendingUsers";
 
 const ManageUserScreen = () => {
-  const { userToken } = useUserContext();
-  const {pendingUsers, setPendingUsers} = usePedingUsersContext();
 
-  useEffect(() => {
-    const getPendingUsers = async () => {
-      try {
-        const response = await axios.get(
-          `${CUID_REQUEST_URL}/auth/pending-users`,
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-          }
-        );
-        if (response.data.users) {
-          setPendingUsers(response.data.users);
-        }
-      } catch (error) {
-        if (isAxiosError(error)) {
-          console.log(error.response?.status, error.response?.data);
-        } else {
-          console.log((error as Error).message);
-        }
-        console.log((error as Error).message);
-      }
-    };
-    getPendingUsers();
-  }, []);
-
+  const {pendingUsers, isPendingUsersFetching} = useGetPendingUsers();
   const renderUserList = useCallback(
     ({ item }: { item: User }) => (
       <TouchableOpacity
-        style={{ flexDirection: "row", alignItems: "center" }}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: wp(1),
+          paddingVertical: hp(2.5),
+          backgroundColor: "#F1F1F1",
+          marginVertical: hp(0.5),
+          borderRadius: wp(3),
+        }}
         activeOpacity={0.7}
         onPress={() => {
           const encodedUser = encodeURIComponent(JSON.stringify(item));
@@ -72,7 +51,7 @@ const ManageUserScreen = () => {
         </View>
         <AntDesign
           name="right"
-          size={wp(5)}
+          size={wp(4)}
           color="#0077B6"
           style={{ paddingLeft: wp(1) }}
         />
@@ -80,43 +59,52 @@ const ManageUserScreen = () => {
     ),
     [pendingUsers]
   );
-
   return (
     <View
       style={{
         paddingHorizontal: wp(2),
-        marginVertical: hp(1),
+        paddingVertical: hp(1),
         flex: 1,
         backgroundColor: "#F9FAFB",
       }}
     >
       <NeuQueueSearchBar />
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          paddingHorizontal: wp(1),
-        }}
-      >
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.label}>Created at</Text>
-      </View>
-      <View
-        style={{
-          backgroundColor: "#F1F1F1",
-          borderRadius: wp(3),
-          padding: wp(1),
-        }}
-      >
-        <FlatList
-          data={pendingUsers}
-          renderItem={renderUserList}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={5}
-          windowSize={5}
-        />
-      </View>
+      {isPendingUsersFetching ? (
+        <View style={styles.centeredView}>
+          <ActivityIndicator size={wp(12)} color="#0077B6" />
+        </View>
+      ) : (
+        <>
+          {!pendingUsers.length ? (
+            <View style={styles.centeredView}>
+              <Text style={[styles.label, { textAlign: "center" }]}>
+                {"All users have been reviewed. \nNo pending approvals."}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  paddingHorizontal: wp(1),
+                }}
+              >
+                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>Created at</Text>
+              </View>
+              <FlatList
+                data={pendingUsers}
+                renderItem={renderUserList}
+                showsVerticalScrollIndicator={false}
+                initialNumToRender={10}
+                maxToRenderPerBatch={5}
+                windowSize={5}
+              />
+            </>
+          )}
+        </>
+      )}
     </View>
   );
 };
@@ -132,7 +120,8 @@ const styles = StyleSheet.create({
   },
   leftValue: {
     fontSize: wp(4),
-    fontFamily: "lexendregular",
+    fontFamily: "lexendmedium",
   },
+  centeredView: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
 export default ManageUserScreen;

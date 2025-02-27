@@ -1,9 +1,6 @@
 import { Text, TouchableOpacity } from "react-native";
 import { CommonButtonProps } from "../types/common-components";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
+import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 const NeuQueueButtonYellow = ({ title, buttonFn }: CommonButtonProps) => {
   return (

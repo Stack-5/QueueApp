@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import React, { Dispatch, SetStateAction } from "react";
+import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Dispatch, SetStateAction } from "react";
 import { CustomerMode } from "../types/mode";
 import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 

@@ -5,6 +5,7 @@ import { AuthSessionResult } from "expo-auth-session";
 import { isAxiosError } from "axios";
 import { verifyAccountRequest } from "../methods/auth/verifyAccountRequest";
 import { useUserContext } from "../contexts/UserContext";
+import { FirebaseError } from "firebase/app";
 
 export const useGoogleSignIn = (
   response: AuthSessionResult | null,
@@ -29,6 +30,8 @@ export const useGoogleSignIn = (
           auth.signOut();
         }
         alert(`${error.response.status}, ${error.response.data.message}`);
+      } else if ((error as FirebaseError).code === "auth/user-disabled") {
+        alert("Your account is disabled. Contact the admin for more info.");
       } else {
         alert((error as Error).message);
       }
