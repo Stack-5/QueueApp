@@ -9,6 +9,7 @@ import { getQueueNumber } from "../services/realtimeDatabaseService";
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
 
+// TODO: verify a jwt before generating QRCODE
 export const generateQrCode = async (req: Request, res: Response) => {
   try {
     const currentQueueNumber = getQueueNumber();
@@ -32,34 +33,32 @@ export const generateQrCode = async (req: Request, res: Response) => {
   }
 };
 
+
+// Modify req body
 export const addQueue = async (req:QueueRequest, res:Response): Promise<void> => {
   try {
-    if (req.id && req.token) {
-      const parsedBody = addToQueueSchema.parse(req.body);
-      const {queueID, purpose, cellphoneNumber, timestamp} = parsedBody;
-      const ref = realtimeDb.ref("queue");
-      const prefix = purpose.substring(0, 1).toUpperCase();
-      const queueIDWithPrefix = `${prefix}${queueID.toString().padStart(3, "0")}`;
-      const newCustomerRef = ref.child(queueIDWithPrefix);
-      newCustomerRef.set({
-        queueID: queueID,
-        purpose: purpose,
-        cellphoneNumber: cellphoneNumber,
-        customerStatus: "pending",
-        timestamp: timestamp,
-      });
+    const parsedBody = addToQueueSchema.parse(req.body);
+    const {queueID, purpose, cellphoneNumber, timestamp, customerStatus} = parsedBody;
+    const ref = realtimeDb.ref("queue");
+    const prefix = purpose.substring(0, 1).toUpperCase();
+    const queueIDWithPrefix = `${prefix}${queueID.toString().padStart(3, "0")}`;
+    const newCustomerRef = ref.child(queueIDWithPrefix);
+    newCustomerRef.set({
+      queueID: queueID,
+      purpose: purpose,
+      cellphoneNumber: cellphoneNumber,
+      customerStatus: customerStatus,
+      timestamp: timestamp,
+    });
 
-      const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token);
-      await usedTokenRef.delete();
-      const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(req.token);
-      await invalidTokenRef.set({
-        cellphoneNumber: cellphoneNumber,
-        timestamp: timestamp,
-      });
-      res.status(201).json({message: "Added Successfully"});
-    } else {
-      res.status(401).json({message: "Invalid or missing token"});
-    }
+    const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token!);
+    await usedTokenRef.delete();
+    const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(req.token!);
+    await invalidTokenRef.set({
+      cellphoneNumber: cellphoneNumber,
+      timestamp: timestamp,
+    });
+    res.status(201).json({message: "Added Successfully"});
   } catch (error) {
     res.status(500).json({message: (error as Error).message});
   }
@@ -67,25 +66,22 @@ export const addQueue = async (req:QueueRequest, res:Response): Promise<void> =>
 
 export const incrementScanCountOnSuccess = async (req: QueueRequest, res: Response) => {
   try {
-    if (req.token) {
-      const {timestamp} : {timestamp:number} = req.body;
-      const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token);
-      const usedToken = await usedTokenRef.get();
-      if (usedToken.exists) {
-        res.status(200).json({message: "Token is already in use"});
-        return;
-      }
-      await usedTokenRef.set({
-        timestamp: timestamp,
-      });
-      const currentQueueNumberRef = realtimeDb.ref("current-queue-number");
-      await currentQueueNumberRef.transaction((currentValue) => {
-        return (currentValue || 0) + 1;
-      });
-      res.status(200).json({message: "Queue number incremented successfully"});
-    } else {
-      res.status(401).json({message: "Invalid or missing token"});
+    const {timestamp} : {timestamp:number} = req.body;
+    const usedTokenRef = firestoreDb.collection("used-tokens").doc(req.token!);
+    const usedToken = await usedTokenRef.get();
+    if (usedToken.exists) {
+      res.status(200).json({message: "Token is already in use"});
+      return;
     }
+    await usedTokenRef.set({
+      timestamp: timestamp,
+    });
+    const currentQueueNumberRef = realtimeDb.ref("current-queue-number");
+    await currentQueueNumberRef.transaction((currentValue) => {
+      return (currentValue || 0) + 1;
+    });
+    res.status(200).json({message: "Queue number incremented successfully"});
+    res.status(401).json({message: "Invalid or missing token"});
   } catch (error) {
     res.status(500).json({message: (error as Error).message});
   }

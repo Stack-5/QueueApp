@@ -5,7 +5,7 @@ import { firestoreDb } from "../config/firebaseConfig";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
-export const verifyJWT = async (req:QueueRequest, res:Response, next: NextFunction) => {
+export const verifyQueueJWT = async (req:QueueRequest, res:Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
