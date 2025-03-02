@@ -21,7 +21,6 @@ const SignInScreen = () => {
     const {isVerified} = useGoogleSignIn(response, setGoogleButtonLoading)
     useAuthStateListenerSignIn(isVerified);
 
-
   return (
     <View style={{ flex: 1, justifyContent: "center", paddingHorizontal:wp(10)}}>
       <View style={{ flexDirection: "row", marginBottom:hp(2), alignSelf:'center'}}>

@@ -16,6 +16,7 @@ export const useAutoSignInStateListener = (
     if (!isFontLoaded) return;
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("user", user)
       if (!user) {
         router.replace("/auth");
         return;
@@ -30,6 +31,7 @@ export const useAutoSignInStateListener = (
           setUserInfo(response.data.user);
           setUserToken(firebaseToken);
           const userRole = response.data.user.role;
+          console.log(userRole);
           if (userRole === "pending") {
             router.replace("/default/pending");
           }else if (employeeRole.includes(userRole)) {

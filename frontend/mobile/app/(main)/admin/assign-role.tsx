@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import User from "../../../types/user";
 import EmployeeRole from "../../../types/role";
 import {
@@ -26,149 +26,181 @@ const AssignRoleScreen = () => {
   const [approveLoading, setApproveLoading] = useState(false);
 
   return (
-    <View
-      style={{
-        backgroundColor: "#F9FAFB",
-        flex: 1,
-        paddingHorizontal: wp(5),
-        justifyContent: "center",
-        opacity: isRoleModalVisible ? 0.1 : 1,
-      }}
-    >
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <Text
-          style={{
-            fontFamily: "lexendregular",
-            color: "#FFC107",
-            fontSize: wp(5),
-          }}
-        >{`${formateDate(new Date(parsedUser?.createdAt!))}, ${formatTime(
-          new Date(parsedUser?.createdAt!)
-        )}`}</Text>
-        <Text
-          style={{
-            fontFamily: "lexendsemibold",
-            color: "#0077B6",
-            fontSize: wp(5),
-            marginVertical: hp(2),
-          }}
-        >
-          {parsedUser?.email}
-        </Text>
-      </View>
-      <TouchableOpacity
-        style={{
-          flexDirection: "row",
-          backgroundColor: "#F1F1F1",
-          padding: wp(3),
-          justifyContent: "space-between",
-          marginTop: hp(1),
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () =>
+            isRoleModalVisible ? (
+              <></>
+            ) : (
+              <TouchableOpacity activeOpacity={0.6} onPress={router.back}>
+                <AntDesign
+                  name="left"
+                  size={wp(5)}
+                  color="#0077B6"
+                  style={{ paddingRight: wp(2) }}
+                />
+              </TouchableOpacity>
+            ),
         }}
-        onPress={() => {
-          setIsRoleModalVisible(true);
-        }}
-        activeOpacity={0.6}
-      >
-        <Text
-          style={{
-            fontFamily: "lexendmedium",
-            color: "#0077B6",
-            fontSize: wp(5),
-          }}
-        >
-          Select Role:{" "}
-        </Text>
-        <Text
-          style={{
-            fontFamily: "lexendmedium",
-            color: "#FFC107",
-            fontSize: wp(5),
-          }}
-        >
-          {selectedRole}
-        </Text>
-        <AntDesign name="right" size={wp(6)} color="#0077B6" />
-      </TouchableOpacity>
-      <View style={{ top: hp(10) }}>
-        <NeuQueueButtonBlue
-          title="Approve"
-          buttonFn={async () => {
-            try {
-              setApproveLoading(true);
-              await assignRole(userToken, parsedUser?.uid!, selectedRole);
-              alert(`assigned ${selectedRole} to ${parsedUser?.email}`);
-              router.back();
-            } catch (error) {
-              alert((error as Error).message);
-            } finally {
-              setApproveLoading(false);
-            }
-          }}
-          loading={approveLoading}
-        />
-      </View>
+      />
 
-      <Modal
-        transparent
-        visible={isRoleModalVisible}
-        animationType="fade"
-        onRequestClose={() => setIsRoleModalVisible(false)}
+      <View
+        style={{
+          backgroundColor: "#F9FAFB",
+          flex: 1,
+          paddingHorizontal: wp(5),
+          justifyContent: "center",
+          opacity: isRoleModalVisible ? 0.1 : 1,
+        }}
       >
-        <View
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text
+            style={{
+              fontFamily: "lexendregular",
+              color: "#FFC107",
+              fontSize: wp(5),
+            }}
+          >{`${formateDate(new Date(parsedUser?.createdAt!))}, ${formatTime(
+            new Date(parsedUser?.createdAt!)
+          )}`}</Text>
+          <Text
+            style={{
+              fontFamily: "lexendsemibold",
+              color: "#0077B6",
+              fontSize: wp(5),
+              marginVertical: hp(2),
+            }}
+          >
+            {parsedUser?.email}
+          </Text>
+        </View>
+        <TouchableOpacity
           style={{
-            flex: 1,
-            paddingHorizontal: wp(2),
-            justifyContent: "center",
+            flexDirection: "row",
+            backgroundColor: "#F1F1F1",
+            padding: wp(3),
+            justifyContent: "space-between",
+            marginTop: hp(1),
           }}
+          onPress={() => {
+            setIsRoleModalVisible(true);
+          }}
+          activeOpacity={0.6}
+        >
+          <Text
+            style={{
+              fontFamily: "lexendmedium",
+              color: "#0077B6",
+              fontSize: wp(5),
+            }}
+          >
+            Select Role:{" "}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "lexendmedium",
+              color: "#FFC107",
+              fontSize: wp(5),
+            }}
+          >
+            {selectedRole}
+          </Text>
+          <AntDesign name="right" size={wp(6)} color="#0077B6" />
+        </TouchableOpacity>
+        <View style={{ top: hp(10) }}>
+          <NeuQueueButtonBlue
+            title="Approve"
+            buttonFn={async () => {
+              try {
+                setApproveLoading(true);
+                await assignRole(userToken, parsedUser?.uid!, selectedRole);
+                alert(`assigned ${selectedRole} to ${parsedUser?.email}`);
+                router.back();
+              } catch (error) {
+                alert((error as Error).message);
+              } finally {
+                setApproveLoading(false);
+              }
+            }}
+            loading={approveLoading}
+          />
+        </View>
+
+        <Modal
+          transparent
+          visible={isRoleModalVisible}
+          animationType="fade"
+          onRequestClose={() => setIsRoleModalVisible(false)}
         >
           <View
             style={{
-              backgroundColor: "#FFC107",
+              flex: 1,
               paddingHorizontal: wp(2),
-              paddingVertical: hp(2),
-              borderRadius: wp(1.5),
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 5,
+              justifyContent: "center",
             }}
           >
-            <TouchableOpacity
-              style={{  borderBottomWidth:wp(0.5), alignItems:"flex-end", borderColor:"#F1F1F1"}}
-              onPress={() => setIsRoleModalVisible(false)}
-              activeOpacity={0.7}
+            <View
+              style={{
+                backgroundColor: "#FFC107",
+                paddingHorizontal: wp(2),
+                paddingVertical: hp(2),
+                borderRadius: wp(1.5),
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
             >
-              <Entypo name="cross" size={wp(10)} color={"#F9FAFB"}/>
-            </TouchableOpacity>
-            {options.map((option) => (
+              {options.map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={{
+                    borderBottomColor: "#f4fbf9",
+                    borderBottomWidth: wp(0.4),
+                    padding: wp(2),
+                  }}
+                  onPress={() => {
+                    chooseRole(option.key, setSelectedRole);
+                    setIsRoleModalVisible(false);
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#F9FAFB",
+                      fontFamily: "lexendmedium",
+                      fontSize: wp(6),
+                    }}
+                  >
+                    {option.roleName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
               <TouchableOpacity
-                key={option.key}
                 style={{
-                  borderBottomColor: "#f4fbf9",
-                  borderBottomWidth: wp(0.4),
                   padding: wp(2),
+                  margin: wp(3),
+                  alignSelf:"flex-end"
                 }}
-                onPress={() => {
-                  chooseRole(option.key, setSelectedRole);
-                  setIsRoleModalVisible(false);
-                }}
+                activeOpacity={0.7}
+                onPress={() => {setIsRoleModalVisible(false)}}
               >
                 <Text
                   style={{
-                    color: "#F9FAFB",
-                    fontFamily: "lexendmedium",
+                    color: "red",
+                    fontFamily: "lexendsemibold",
                     fontSize: wp(6),
                   }}
                 >
-                  {option.roleName}
+                  Cancel
                 </Text>
               </TouchableOpacity>
-            ))}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </>
   );
 };
 
