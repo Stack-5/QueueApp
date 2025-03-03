@@ -15,11 +15,12 @@ import {
 import User from "../../../types/user";
 import { AntDesign } from "@expo/vector-icons";
 import useGetEmployees from "../../../hooks/data-fetching-hooks/useGetEmployees";
+import { router } from "expo-router";
+import { useSelectedEmployeeContext } from "../../../contexts/SelectedEmployeeContext";
 
 const ManageEmployees = () => {
-
   const { employeeList, isEmployeesFetching } = useGetEmployees();
-
+  const {setSelectedEmployee} = useSelectedEmployeeContext();
   console.log(employeeList);
 
   const renderEmployees = useCallback(
@@ -34,6 +35,10 @@ const ManageEmployees = () => {
           padding: wp(2),
           marginVertical: hp(0.5),
           borderRadius: wp(3),
+        }}
+        onPress={() => {
+          setSelectedEmployee(item);
+          router.push(`/admin/employee-info`);
         }}
       >
         <View>

@@ -3,16 +3,15 @@ import { auth } from "../config/firebaseConfig";
 import AuthRequest from "../types/AuthRequest";
 import { FirebaseAuthError } from "firebase-admin/auth";
 
-export const verifyAuthToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const verifyAuthTokenAndDomain = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       res.status(401).json({message: "Invalid or missing token"});
       return;
     }
-
     const decodedToken = await auth.verifyIdToken(token);
-    const email = decodedToken.email ?? "";
+    const email = decodedToken.email!;
     if (!email.endsWith("@neu.edu.ph")) {
       auth.updateUser(decodedToken.uid, {
         disabled: true,

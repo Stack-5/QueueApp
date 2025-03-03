@@ -25,6 +25,7 @@ export const verifyAccountInformation = async (req: AuthRequest, res: Response):
       await userRef.set({
         role: "pending",
       });
+      req.user.role = "pending";
       console.log("userRole After", userRole);
       res.status(202).json({ message: "Your request is pending. Wait for admin approval.", user: req.user });
       return;
@@ -91,7 +92,7 @@ export const assignUserRole = async (req:AuthRequest, res:Response) => {
       return;
     }
     if (req.user.role !== "admin") {
-      res.status(403).json({message: "Forbideden: Request is not allowed"});
+      res.status(403).json({message: "Forbidden: Request is not allowed"});
       return;
     }
     const validRoles = ["admin", "cashier", "information"];
@@ -102,8 +103,12 @@ export const assignUserRole = async (req:AuthRequest, res:Response) => {
     await auth.setCustomUserClaims(uid, {role: role});
     await auth.revokeRefreshTokens(uid);
     const userRef = realtimeDb.ref(`users/${uid}`);
+    const snapshot = await userRef.get();
+    const existingData = snapshot.exists() ? snapshot.val() : {};
+
     await userRef.set({
       role: role,
+      ...(role === "cashier" ? { station: existingData.station ?? null } : {}),
     });
     res.status(200).json({message: "Role assigned successfully"});
   } catch (error) {

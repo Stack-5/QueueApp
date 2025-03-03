@@ -11,8 +11,9 @@ import {
 } from "react-native-responsive-screen";
 
 const PendingScreen = () => {
-  const { userInfo } = useUserContext();
-  console.log(userInfo?.role);
+  const { userInfo, userToken } = useUserContext();
+  console.log("role in pending", userInfo);
+  console.log("token in pending", userToken);
   useSignOutAuthStateListener();
 
   return (
