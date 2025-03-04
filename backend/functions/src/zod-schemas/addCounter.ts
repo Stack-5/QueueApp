@@ -1,11 +1,6 @@
-import { number, object, string, enum as zEnum } from "zod";
-
-const cashierEmployeeSchema = object({
-  uid: string(),
-  role: zEnum(["cashier", "admin"]).default("cashier"),
-});
+import { number, object, string } from "zod";
 
 export const addCounterSchema = object({
   counterNumber: number().int().positive(),
-  cashierEmployee: cashierEmployeeSchema.optional(),
+  employeeUID: string().optional(),
 });
