@@ -1,11 +1,9 @@
 import * as v2 from "firebase-functions/v2";
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import dotenv from "dotenv";
-import queueRoutes from "./routers/queueRoutes";
 import cors from "cors";
 import "./services/realtimeDatabaseService";
-import authRoutes from "./routers/authRoutes";
-import cashierRoutes from "./routers/cashierRoutes";
+import routes from "./routes";
 
 dotenv.config();
 const app: Express = express();
@@ -23,15 +21,10 @@ app.use(
     },
   })
 );
+
 app.use(express.json());
+app.use(routes);
 
-app.get("/", (req:Request, res:Response) => {
-  res.send("<h1>Welcome to NEUQUEUE</h1>");
-});
-
-app.use("/queue", queueRoutes);
-app.use("/auth", authRoutes);
-app.use("/cashier", cashierRoutes);
 
 export const neu = v2.https.onRequest(app);
 
