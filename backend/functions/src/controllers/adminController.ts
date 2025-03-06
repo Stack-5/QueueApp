@@ -28,13 +28,13 @@ export const getPendingUsers = async (req: AuthRequest, res: Response) => {
 export const getEmployees = async (req: AuthRequest, res: Response) => {
   try {
     const userList = await auth.listUsers();
-    const allowedRoles =
+    const allowedRolesToGet =
       req.user!.role === "superAdmin" ? ["admin", "cashier", "information"] : ["cashier", "information"];
     const employees = userList.users
       .filter(
         (user) =>
           user.customClaims?.role &&
-          allowedRoles.includes(user.customClaims.role) &&
+          allowedRolesToGet.includes(user.customClaims.role) &&
           user.uid !== req.user!.uid
       )
       .map((user) => ({

@@ -1,6 +1,6 @@
 import AuthRequest from "../types/AuthRequest";
 import {Response} from "express";
-import { allowedRoles } from "../utils/allowedRoles";
+import { neuQueueAppRoles } from "../utils/roles";
 import { auth, realtimeDb } from "../config/firebaseConfig";
 
 export const verifyAccountInformation = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -19,7 +19,7 @@ export const verifyAccountInformation = async (req: AuthRequest, res: Response):
 
     const userRole: string | undefined = req.user.role;
     console.log("userRole Before", userRole);
-    if (!userRole || !allowedRoles.includes(userRole.trim())) {
+    if (!userRole || !neuQueueAppRoles.includes(userRole.trim())) {
       await auth.setCustomUserClaims(req.user.uid, { role: "pending" });
       const userRef = realtimeDb.ref(`users/${req.user.uid}`);
       await userRef.set({
