@@ -1,10 +1,10 @@
 import { View, Text } from "react-native";
 import React from "react";
-import { auth } from "../../../firebaseConfig";
-import { useSignOutAuthStateListener } from "../../../hooks/useSignOutAuthStateListener";
-import { useUserContext } from "../../../contexts/UserContext";
-import NeuQueueButtonYellow from "../../../components/NeuQueueButtonYellow";
-import NeuQueueLogo from "../../../components/NeuQueueLogo";
+import { auth } from "@firebaseConfig";
+import { useSignOutAuthStateListener } from "@hooks/useSignOutAuthStateListener";
+import { useUserContext } from "@contexts/UserContext";
+import NeuQueueButtonYellow from "@components/NeuQueueButtonYellow";
+import NeuQueueLogo from "@components/NeuQueueLogo";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,

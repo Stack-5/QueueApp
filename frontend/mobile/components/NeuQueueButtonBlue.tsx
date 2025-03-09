@@ -1,6 +1,6 @@
 import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import React from "react";
-import { CommonButtonProps } from "../types/common-components";
+import { CommonButtonProps } from "../type/common-components";
 import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 const NeuQueueButtonBlue = ({
@@ -17,6 +17,7 @@ const NeuQueueButtonBlue = ({
       }}
       activeOpacity={0.8}
       onPress={buttonFn}
+      disabled={loading}
     >
       {loading? <ActivityIndicator size={wp(7)} color={"#F9FAFB"}/> :    <Text
         style={{

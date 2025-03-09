@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity } from "react-native";
 import React from "react";
-import { CommonButtonProps } from "../types/common-components";
+import { CommonButtonProps } from "../type/common-components";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,

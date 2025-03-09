@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet } from "react-native";
 import { useState } from "react";
-import ServeButton from "../../components/ServeButton";
-import { CustomerMode } from "../../types/mode";
+import ServeButton from "@components/ServeButton";
+import { CustomerMode } from "@type/mode";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { router } from "expo-router";
-import NeuQueueSmallButton from "../../components/NeuQueueSmallButton";
-import NeuQueueButtonYellow from "../../components/NeuQueueButtonYellow";
+import NeuQueueSmallButton from "@components/NeuQueueSmallButton";
+import NeuQueueButtonYellow from "@components/NeuQueueButtonYellow";
 
 const QueueScreen = () => {
   const [customerMode, setCustomerMode] = useState<CustomerMode>("Payment");

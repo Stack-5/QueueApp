@@ -13,11 +13,11 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { AntDesign, Entypo } from "@expo/vector-icons";
-import { chooseRole, options } from "../../../methods/roleOptions";
-import EmployeeRole from "../../../types/role";
-import changeEmployeeRole from "../../../methods/admin/changeEmployeeRole";
-import { useUserContext } from "../../../contexts/UserContext";
-import { useSelectedEmployeeContext } from "../../../contexts/SelectedEmployeeContext";
+import { useUserContext } from "@contexts/UserContext";
+import { useSelectedEmployeeContext } from "@contexts/SelectedEmployeeContext";
+import EmployeeRole from "@type/role";
+import changeEmployeeRole from "@methods/admin/axios-requests/changeEmployeeRole";
+import { chooseRole, options } from "@methods/admin/roleOptions";
 
 const EmployeeInfoScreen = () => {
   const { userToken } = useUserContext();
@@ -126,7 +126,10 @@ const EmployeeInfoScreen = () => {
                           borderRadius: wp(2),
                         }}
                         activeOpacity={0.7}
-                        onPress={() => setIsChangeRoleModalVisible(true)}
+                        onPress={() => {
+                          setSelectedRole(selectedEmployee?.role as EmployeeRole);
+                          setIsChangeRoleModalVisible(true);
+                        }}
                       >
                         <Text
                           style={{

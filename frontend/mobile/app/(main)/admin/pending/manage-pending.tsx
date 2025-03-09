@@ -7,17 +7,17 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useCallback} from "react";
-import NeuQueueSearchBar from "../../../components/NeuQueueSearchBar";
+import NeuQueueSearchBar from "@components/NeuQueueSearchBar";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-import User from "../../../types/user";
-import formatDate from "../../../methods/date/formatDate";
-import formatTime from "../../../methods/date/formatTime";
+import User from "@type/user";
+import formatDate from "@methods/date/formatDate";
+import formatTime from "@methods/date/formatTime";
 import { AntDesign } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useGetPendingUsers } from "../../../hooks/data-fetching-hooks/useGetPendingUsers";
+import { useGetPendingUsers } from "@hooks/data-fetching-hooks/useGetPendingUsers";
 
 const ManageUserScreen = () => {
 
@@ -37,7 +37,7 @@ const ManageUserScreen = () => {
         activeOpacity={0.7}
         onPress={() => {
           const encodedUser = encodeURIComponent(JSON.stringify(item));
-          router.push(`/admin/assign-role?user=${encodedUser}`);
+          router.push(`/admin/pending/assign-role?user=${encodedUser}`);
         }}
       >
         <Text style={[styles.leftValue, { flex: 1 }]}>{item.email}</Text>

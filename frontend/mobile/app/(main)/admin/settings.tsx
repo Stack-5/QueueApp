@@ -5,13 +5,13 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-import NeuQueueSettingsButton from "../../../components/NeuQueueSettingsButton";
-import NeuQueueButtonYellow from "../../../components/NeuQueueButtonYellow";
-import { auth } from "../../../firebaseConfig";
-import { useSignOutAuthStateListener } from "../../../hooks/useSignOutAuthStateListener";
+import NeuQueueSettingsButton from "@components/NeuQueueSettingsButton";
+import NeuQueueButtonYellow from "@components/NeuQueueButtonYellow";
+import { auth } from "@firebaseConfig";
+import { useSignOutAuthStateListener } from "@hooks/useSignOutAuthStateListener";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUserContext } from "../../../contexts/UserContext";
-import { adminOptions, optionMethods } from "../../../methods/admin/adminOptions";
+import { useUserContext } from "@contexts/UserContext";
+import { adminOptions, optionMethods } from "@methods/admin/adminOptions";
 
 const AdminSettingsScreen = () => {
   useSignOutAuthStateListener();

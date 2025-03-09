@@ -4,7 +4,7 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-import { useUserContext } from "../../../contexts/UserContext";
+import { useUserContext } from "@contexts/UserContext";
 import { useRouter } from "expo-router";
 
 const InformationInfo = () => {

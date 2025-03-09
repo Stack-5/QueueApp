@@ -1,19 +1,19 @@
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import User from "../../../types/user";
-import EmployeeRole from "../../../types/role";
+import User from "@type/user";
+import EmployeeRole from "@type/role";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import formateDate from "../../../methods/date/formatDate";
-import formatTime from "../../../methods/date/formatTime";
+import formateDate from "@methods/date/formatDate";
+import formatTime from "@methods/date/formatTime";
 import { AntDesign, Entypo } from "@expo/vector-icons";
-import { chooseRole, options } from "../../../methods/roleOptions";
-import assignRole from "../../../methods/admin/assignRole";
-import { useUserContext } from "../../../contexts/UserContext";
-import NeuQueueButtonBlue from "../../../components/NeuQueueButtonBlue";
+import assignRole from "@methods/admin/axios-requests/assignRole";
+import { useUserContext } from "@contexts/UserContext";
+import NeuQueueButtonBlue from "@components/NeuQueueButtonBlue";
+import { chooseRole, options } from "@methods/admin/roleOptions";
 
 const AssignRoleScreen = () => {
   const { user } = useLocalSearchParams();

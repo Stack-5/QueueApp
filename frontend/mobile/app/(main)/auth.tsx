@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp} from "react-native-responsive-screen";
-import NQGoogleSignInButton from "../../components/NQGoogleSignInButton";
+import NQGoogleSignInButton from "@components/NQGoogleSignInButton";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { ANDROID_CLIENT_ID, WEB_CLIENT_ID } from "@env";
 import { useState } from "react";
-import { useGoogleSignIn } from "../../hooks/useGoogleSignIn";
-import { useAuthStateListenerSignIn } from "../../hooks/useSignInAuthStateListener";
+import { useGoogleSignIn } from "@hooks/useGoogleSignIn";
+import { useAuthStateListenerSignIn } from "@hooks/useSignInAuthStateListener";
 import { makeRedirectUri } from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();

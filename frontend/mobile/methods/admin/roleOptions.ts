@@ -1,5 +1,6 @@
+import EmployeeRole from "@type/role";
 import { Dispatch, SetStateAction } from "react";
-import EmployeeRole from "../types/role";
+
 
 export const options = [
   { key: 1, roleName: "Admin" },

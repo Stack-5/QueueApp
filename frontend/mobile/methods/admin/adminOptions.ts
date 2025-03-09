@@ -15,7 +15,7 @@ const adminOptions: OptionAdminType[] = [
   {
     key: 2,
     iconName: "account-cash",
-    label: "Manage cashier",
+    label: "Manage stations",
   },
   {
     key: 3,
@@ -33,17 +33,19 @@ const optionMethods = (key: number) => {
   switch (key) {
     case 1:
       return () => {
-        router.push("/admin/manage-employees");
+        router.push("/admin/employee/manage-employees");
       };
     case 2:
-      return () => {};
+      return () => {
+        router.push("/admin/station/manage-stations");
+      };
     case 3:
       return () => {
         router.push("/admin/view-logs");
       };
     case 4:
       return () => {
-        router.push("/admin/manage-pending");
+        router.push("/admin/pending/manage-pending");
       };
     default:
       return () => {};

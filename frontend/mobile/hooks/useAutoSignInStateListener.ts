@@ -26,7 +26,7 @@ export const useAutoSignInStateListener = (
         const firebaseToken = await getIdToken(user, true);
         const response = await verifyAccountRequest(firebaseToken);
         console.dir(JSON.stringify(response.data), {depth: null});
-        const employeeRole = ["admin", "cashier", "information"];
+        const employeeRole = ["admin", "cashier", "information", "superAdmin"];
         if (response.data.user) {
           setUserInfo(response.data.user);
           setUserToken(firebaseToken);
