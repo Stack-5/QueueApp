@@ -99,3 +99,36 @@ export const assignUserRole = async (
     res.status(500).json({ message: (error as Error).message });
   }
 };
+
+export const getUserData = async (req: AuthRequest, res: Response) => {
+  try {
+    const {uid} = req.params;
+    const userRecord = await auth.getUser(uid);
+    res.status(200).json({userData: userRecord});
+  } catch (error) {
+    res.status(500).json({message: (error as Error).message});
+  }
+};
+
+export const getAvailableCashierEmployees = async (req: AuthRequest, res: Response) => {
+  try {
+    const userList = await auth.listUsers();
+    const cashierEmployees = userList.users.filter(
+      (user) => user.customClaims?.role === "cashier"
+    );
+
+    const usersRef = realtimeDb.ref("users");
+    const userSnapshot = await usersRef.get();
+
+    const usersData = userSnapshot.val() ?? [];
+
+    const availableCashiers = cashierEmployees.filter((cashier) => {
+      const userData = usersData[cashier.uid];
+      return userData && !userData.counterID;
+    });
+
+    res.status(200).json({ availableCashiers });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
