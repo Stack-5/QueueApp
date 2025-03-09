@@ -96,6 +96,7 @@ export const updateCounter = async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    const previousEmployeeUID = snapshot.val().uid;
     await counterRef.update({
       counterNumber: counterNumber,
       uid: employeeUID || null,
@@ -126,6 +127,9 @@ export const updateCounter = async (req: AuthRequest, res: Response) => {
         role: employeeSnapshot.val().role,
         counterID: counterID,
       });
+    } else if (previousEmployeeUID) {
+      const prevEmployeeRef = realtimeDb.ref(`users/${previousEmployeeUID}`);
+      await prevEmployeeRef.update({ counterID: null });
     }
 
     const updatedSnapshot = await counterRef.get();
