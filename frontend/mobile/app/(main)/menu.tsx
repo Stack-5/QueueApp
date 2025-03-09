@@ -1,18 +1,18 @@
 import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect } from "react";
-import NeuMainMenuButton from "../../components/NeuQueueMainMenuButton";
+import NeuMainMenuButton from "@components/NeuQueueMainMenuButton";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { router } from "expo-router";
-import NeuQueueLogo from "../../components/NeuQueueLogo";
-import { useUserContext } from "../../contexts/UserContext";
+import NeuQueueLogo from "@components/NeuQueueLogo";
+import { useUserContext } from "@contexts/UserContext";
 
 const MainMenuScreen = () => {
-  const { userInfo } = useUserContext();
+  const { userInfo, userToken } = useUserContext();
 
-  console.log(userInfo);
+  console.log(userToken);
 
   return (
     <View
@@ -58,7 +58,7 @@ const MainMenuScreen = () => {
             <NeuMainMenuButton
               title="Settings"
               buttonFn={() => {
-                if (userInfo?.role === "admin") {
+                if (userInfo?.role === "admin" || userInfo?.role === "superAdmin") {
                   router.push("admin/settings");
                 } else if (userInfo?.role === "cashier") {
                   router.push("cashier/settings");

@@ -7,7 +7,7 @@ import {
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { groupedLogs, Log } from "../../../types/logs";
+import { groupedLogs, Log } from "@type/logs";
 
 const ViewLogs = () => {
   const router = useRouter();

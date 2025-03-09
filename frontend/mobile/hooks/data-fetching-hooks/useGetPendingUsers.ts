@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserContext } from "../../contexts/UserContext";
-import User from "../../types/user";
+import User from "../../type/user";
 import { onValue, ref } from "firebase/database";
 import { realtimeDb } from "../../firebaseConfig";
 import axios, { isAxiosError } from "axios";
@@ -17,7 +17,7 @@ export const useGetPendingUsers = () => {
       try {
         setIsPendingUsersFetching(true);
         const response = await axios.get(
-          `${CUID_REQUEST_URL}/auth/pending-users`,
+          `${CUID_REQUEST_URL}/admin/pending-users`,
           {
             headers: {
               Authorization: `Bearer ${userToken}`,

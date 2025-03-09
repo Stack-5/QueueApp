@@ -13,6 +13,7 @@ export const useGoogleSignIn = (
 ) => {
   const [isVerified, setIsVerified] = useState(false);
   const { setUserInfo, setUserToken } = useUserContext();
+  
   const verifyAuthInformation = async (token: string) => {
     try {
       const credential = GoogleAuthProvider.credential(token);
@@ -20,9 +21,9 @@ export const useGoogleSignIn = (
       const firebaseToken = await userCredential.user.getIdToken();
       const response = await verifyAccountRequest(firebaseToken);
       setIsVerified(true);
-      setUserInfo(response.data.user);
+      setUserInfo(response!.data.user);
       setUserToken(firebaseToken);
-      console.log("this is the role in sign in", response.data.user.role);
+      console.log("this is the role in sign in", response!.data.user.role);
     } catch (error) {
       if (isAxiosError(error) && error.response) {
         if (error.response.status === 403) {
@@ -40,11 +41,13 @@ export const useGoogleSignIn = (
   };
 
   useEffect(() => {
+    console.log("did run")
     if (response?.type == "success") {
       const { id_token } = response.params;
       /* const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential); */
       verifyAuthInformation(id_token);
+      console.log("success")
     } else {
       setGoogleLoading(false);
     }

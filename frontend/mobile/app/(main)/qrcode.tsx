@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import NeuQueueLogo from "../../components/NeuQueueLogo";
+import NeuQueueLogo from "@components/NeuQueueLogo";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -7,7 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import axios, { isAxiosError } from "axios";
 import { CUID_REQUEST_URL } from "@env";
-import { realtimeDb } from "../../firebaseConfig";
+import { realtimeDb } from "@firebaseConfig";
 import { onValue, ref } from "firebase/database";
 import { SvgXml } from "react-native-svg";
 

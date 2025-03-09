@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Dispatch, SetStateAction } from "react";
-import { CustomerMode } from "../types/mode";
+import { CustomerMode } from "../type/mode";
 import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 type ServerButtonProps = {

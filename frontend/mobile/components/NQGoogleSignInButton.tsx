@@ -31,6 +31,7 @@ const NQGoogleSignInButton: React.FC<NQGoogleSignInButtonProp> = (prop) => {
       }}
       activeOpacity={0.5}
       onPress={onPress}
+      disabled={loading}
     >
       {loading ? (
         <ActivityIndicator size={wp(7)} />

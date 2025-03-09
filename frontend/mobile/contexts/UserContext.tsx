@@ -1,5 +1,5 @@
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from "react";
-import User from "../types/user";
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState, FC } from "react";
+import User from "../type/user";
 
 type UserContextType = {
   userInfo:User | null;
@@ -11,7 +11,7 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider: React.FC<{children: ReactNode}> = ({children}) => {
+export const UserProvider: FC<{children: ReactNode}> = ({children}) => {
 
   const [userInfo, setUserInfo] = useState<User| null>(null);
   const [userToken, setUserToken] = useState("")

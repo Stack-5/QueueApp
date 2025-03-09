@@ -13,7 +13,8 @@ export const useAuthStateListenerSignIn = (isVerified: boolean) => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const employeeRole = ["admin", "cashier", "information"];
+        console.log(userInfo?.role)
+        const employeeRole = ["admin", "cashier", "information", "superAdmin"];
         if (userInfo?.role === "pending") {
           router.replace("/default/pending");
         } else if (employeeRole.includes(userInfo?.role!)) {

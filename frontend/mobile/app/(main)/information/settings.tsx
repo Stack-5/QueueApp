@@ -6,12 +6,12 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import NeuQueueSettingsButton from "../../../components/NeuQueueSettingsButton";
-import NeuQueueButtonYellow from "../../../components/NeuQueueButtonYellow";
-import { auth } from "../../../firebaseConfig";
-import { useSignOutAuthStateListener } from "../../../hooks/useSignOutAuthStateListener";
+import NeuQueueSettingsButton from "@components/NeuQueueSettingsButton";
+import NeuQueueButtonYellow from "@components/NeuQueueButtonYellow";
+import { auth } from "@firebaseConfig";
+import { useSignOutAuthStateListener } from "@hooks/useSignOutAuthStateListener";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUserContext } from "../../../contexts/UserContext";
+import { useUserContext } from "@contexts/UserContext";
 
 const CashierSettings = () => {
   useSignOutAuthStateListener();

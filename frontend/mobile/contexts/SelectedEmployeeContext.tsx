@@ -5,8 +5,9 @@ import {
   SetStateAction,
   useContext,
   useState,
+  FC
 } from "react";
-import User from "../types/user";
+import User from "../type/user";
 
 type SelectedEmployeeContextType = {
   selectedEmployee: User | null;
@@ -17,7 +18,7 @@ const SelectedEmployeeContext = createContext<
   SelectedEmployeeContextType | undefined
 >(undefined);
 
-export const SelectedEmployeeProvider: React.FC<{ children: ReactNode }> = ({
+export const SelectedEmployeeProvider: FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<User | null>(null);
