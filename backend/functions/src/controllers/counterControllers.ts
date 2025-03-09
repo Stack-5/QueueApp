@@ -59,7 +59,19 @@ export const deleteCounter = async (req: AuthRequest, res: Response) => {
       res.status(404).json({ message: "Counter not found" });
       return;
     }
-    await counterRef.remove();
+    const counterData = snapshot.val();
+    const updates: Record<string, null> = {};
+
+    if (counterData?.uid) {
+      updates[`users/${counterData.uid}/counterID`] = null;
+    }
+
+    // Remove the counter
+    updates[`counters/${counterID}`] = null;
+
+    // Apply all updates in one batch
+    await realtimeDb.ref().update(updates);
+
     res
       .status(200)
       .json({ message: `${snapshot.val().counterNumber} has been removed` });

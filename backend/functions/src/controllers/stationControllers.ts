@@ -10,12 +10,19 @@ export const addStation = async (req:AuthRequest, res:Response) => {
     const {name, description, activated, type} = parsedBody;
 
     const stationRef = realtimeDb.ref("stations").push();
+    const stationID = stationRef.key;
     await stationRef.set({
       name: name,
       description: description,
       activated: activated,
       type: type,
     });
+
+    const currentNumberRef = realtimeDb.ref(`current-queue-number/${stationID}`);
+    await currentNumberRef.set({
+      currentNumber: 1,
+    });
+
     res.status(201).json({message: "Station added successfully."});
   } catch (error) {
     res.status(500).json({message: (error as Error).message});
@@ -53,7 +60,36 @@ export const deleteStation = async (req:AuthRequest, res:Response) => {
     if (stationData.activated) {
       throw new Error("Deactivate the station before deleting");
     }
-    await stationRef.remove();
+
+    const counterRef = realtimeDb.ref("counters");
+    const counterSnapshot = await counterRef.get();
+    const counters = counterSnapshot.val() ?? {};
+
+    const usersRef = realtimeDb.ref("users");
+    const usersSnapshot = await usersRef.get();
+    const users = usersSnapshot.val() ?? {};
+
+    const stationCounters = Object.keys(counters).filter(
+      (counterID) => counters[counterID].stationID === stationID
+    );
+
+    const updates: Record<string, null> = {};
+    stationCounters.forEach((counterID) => {
+      const counterData = counters[counterID];
+
+      if (counterData.uid && users[counterData.uid]) {
+        updates[`users/${counterData.uid}/counterID`] = null; // Remove counterID from cashier
+      }
+
+      updates[`counters/${counterID}`] = null; // Delete counter
+    });
+
+    // Delete station and current queue number
+    updates[`stations/${stationID}`] = null;
+    updates[`current-queue-number/${stationID}`] = null;
+
+    // Apply all updates in one batch
+    await realtimeDb.ref().update(updates);
     res.status(200).json({message: `${snapshot.val().name} has been deleted successfully`});
   } catch (error) {
     res.status(500).json({message: (error as Error).message});
