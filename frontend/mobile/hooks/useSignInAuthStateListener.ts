@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth } from "@firebaseConfig";
 import { router } from "expo-router";
-import { useUserContext } from "../contexts/UserContext";
+import { useUserContext } from "@contexts/UserContext";
 
 export const useAuthStateListenerSignIn = (isVerified: boolean) => {
   const { userInfo } = useUserContext();

@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { auth } from "../firebaseConfig";
+import { auth } from "@firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUserContext } from "../contexts/UserContext";
+import { useUserContext } from "@contexts/UserContext";
 
 export const useSignOutAuthStateListener = () => {
   const {setUserInfo} = useUserContext();

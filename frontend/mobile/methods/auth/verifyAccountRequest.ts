@@ -11,7 +11,7 @@ export const verifyAccountRequest = async (
       },
     });
   
-    return response;
+    return response.data;
   } catch (error) {
     alert((error as Error).message);
   }

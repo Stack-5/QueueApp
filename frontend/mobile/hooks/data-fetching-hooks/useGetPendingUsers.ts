@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useUserContext } from "../../contexts/UserContext";
-import User from "../../type/user";
+import { useUserContext } from "@contexts/UserContext";
+import User from "@type/user";
 import { onValue, ref } from "firebase/database";
-import { realtimeDb } from "../../firebaseConfig";
+import { realtimeDb } from "@firebaseConfig";
 import axios, { isAxiosError } from "axios";
 import { CUID_REQUEST_URL } from "@env";
 
