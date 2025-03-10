@@ -1,10 +1,10 @@
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { useEffect, useState } from "react";
-import { auth } from "../firebaseConfig";
+import { auth } from "@firebaseConfig";
 import { AuthSessionResult } from "expo-auth-session";
 import { isAxiosError } from "axios";
-import { verifyAccountRequest } from "../methods/auth/verifyAccountRequest";
-import { useUserContext } from "../contexts/UserContext";
+import { verifyAccountRequest } from "@methods/auth/verifyAccountRequest";
+import { useUserContext } from "@contexts/UserContext";
 import { FirebaseError } from "firebase/app";
 
 export const useGoogleSignIn = (
