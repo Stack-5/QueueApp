@@ -27,9 +27,10 @@ export const getCounters = async (req: AuthRequest, res: Response) => {
     const counterRef = realtimeDb.ref("counters");
     const snapshot = await counterRef.get();
     const counters = snapshot.val();
+
     type Counter = {
       counterNumber: string;
-      employeeCashier: { uid: string; role: "cashier" | "admin" } | null;
+      uid: string | null,
       stationID: string;
     };
     const counterList = Object.entries(counters ?? [])
@@ -37,7 +38,6 @@ export const getCounters = async (req: AuthRequest, res: Response) => {
       .map(([id, data]) => ({
         id,
         ...(data as Counter),
-        stationID: stationID,
       }));
     res.status(200).json({ counterList: counterList });
   } catch (error) {

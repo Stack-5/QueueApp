@@ -1,16 +1,20 @@
 import { Router } from "express";
-import { verifyQueueJWT } from "../middlewares/verifyQueueJWT";
+import { verifyUsedToken, verifyValidQueueJWT } from "../middlewares/verifyValidQueueJWT";
 import {
   addQueue,
   generateQrCode,
-  incrementScanCountOnSuccess,
+  getAvailableStation,
+  getLatestQueueIDs,
+  getQueuePosition,
 } from "../controllers/queueControllers";
 
 // eslint-disable-next-line new-cap
 const router: Router = Router();
 
 router.get("/qrcode", generateQrCode);
-router.post("/add", verifyQueueJWT, addQueue);
-router.post("/notify", verifyQueueJWT, incrementScanCountOnSuccess);
+router.post("/add", verifyValidQueueJWT, verifyUsedToken, addQueue);
+router.get("/available-stations", verifyValidQueueJWT, verifyUsedToken, getAvailableStation);
+router.post("/queue-position", verifyValidQueueJWT, getQueuePosition);
+router.get("/get-latest", verifyValidQueueJWT, getLatestQueueIDs);
 
 export default router;
