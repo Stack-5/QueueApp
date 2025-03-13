@@ -18,18 +18,20 @@ export const editStation = async (
         name: stationName,
         description: stationDescription,
         type: stationType,
-        activated: isActivated
-      },{
-        headers:{
-          Authorization: `Bearer ${userToken}`
-        }
+        activated: isActivated,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       }
     );
 
     console.log(response.data, response.status);
   } catch (error) {
-    if(isAxiosError(error)) {
+    if (isAxiosError(error)) {
       console.log(error.response?.data);
+      throw new Error(error.response?.data.message);
     }
     throw error;
   }

@@ -1,5 +1,5 @@
 import { CUID_REQUEST_URL } from "@env";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
 export const addCounter = async (
   stationID: string,
@@ -20,6 +20,10 @@ export const addCounter = async (
     );
     console.log(response.data, response.status);
   } catch (error) {
+    if (isAxiosError(error)) {
+      console.log(error.response?.data);
+      throw new Error(error.response?.data.message);
+    }
     throw error;
   }
 };

@@ -24,7 +24,8 @@ const changeEmployeeRole = async (
     return response.status;
   } catch (error) {
     if (isAxiosError(error)) {
-      console.log(error.response?.status, error.response?.data);
+      console.log(error.response?.data);
+      throw new Error(error.response?.data.message);
     }
     throw error;
   }
