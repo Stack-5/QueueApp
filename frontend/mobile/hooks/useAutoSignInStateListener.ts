@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import { getIdToken, onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
-import { auth } from "../firebaseConfig";
-import { useUserContext } from "../contexts/UserContext";
-import { verifyAccountRequest } from "../methods/auth/verifyAccountRequest";
+import { auth } from "@firebaseConfig";
+import { useUserContext } from "@contexts/UserContext";
+import { verifyAccountRequest } from "@methods/auth/verifyAccountRequest";
 import { isAxiosError } from "axios";
 
 export const useAutoSignInStateListener = (
@@ -25,12 +25,12 @@ export const useAutoSignInStateListener = (
       try {
         const firebaseToken = await getIdToken(user, true);
         const response = await verifyAccountRequest(firebaseToken);
-        console.dir(JSON.stringify(response.data), {depth: null});
+        console.log("response in auto sign in", response.data);
         const employeeRole = ["admin", "cashier", "information", "superAdmin"];
-        if (response.data.user) {
-          setUserInfo(response.data.user);
+        if (response.user) {
+          setUserInfo(response.user);
           setUserToken(firebaseToken);
-          const userRole = response.data.user.role;
+          const userRole = response.user.role;
           console.log(userRole);
           if (userRole === "pending") {
             router.replace("/default/pending");

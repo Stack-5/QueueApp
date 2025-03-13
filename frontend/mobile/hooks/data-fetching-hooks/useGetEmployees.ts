@@ -1,9 +1,9 @@
 import axios from "axios";
 import { onValue, ref } from "firebase/database";
 import {  useEffect, useState } from "react";
-import { realtimeDb } from "../../firebaseConfig";
-import User from "../../type/user";
-import { useUserContext } from "../../contexts/UserContext";
+import { realtimeDb } from "@firebaseConfig";
+import User from "@type/user";
+import { useUserContext } from "@contexts/UserContext";
 import { CUID_REQUEST_URL } from "@env";
 
 const useGetEmployees =  () => {

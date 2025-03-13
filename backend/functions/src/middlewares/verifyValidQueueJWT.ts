@@ -5,7 +5,7 @@ import { firestoreDb } from "../config/firebaseConfig";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
-export const verifyQueueJWT = async (req:QueueRequest, res:Response, next: NextFunction) => {
+export const verifyValidQueueJWT = async (req:QueueRequest, res:Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -14,7 +14,7 @@ export const verifyQueueJWT = async (req:QueueRequest, res:Response, next: NextF
       return;
     }
 
-    const invalidTokenRef = firestoreDb.collection("invalid-tokens").doc(token);
+    const invalidTokenRef = firestoreDb.collection("invalid-token").doc(token);
     const invalidTokenDoc = await invalidTokenRef.get();
 
     if (invalidTokenDoc.exists) {
@@ -36,5 +36,27 @@ export const verifyQueueJWT = async (req:QueueRequest, res:Response, next: NextF
     } else {
       res.status(500).json({message: (error as Error).message});
     }
+  }
+};
+
+export const verifyUsedToken = async (req: QueueRequest, res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      res.status(401).json({ message: "Invalid or missing token" });
+      return;
+    }
+
+    const usedTokenRef = firestoreDb.collection("used-token").doc(token);
+    const usedTokenDoc = await usedTokenRef.get();
+    if (usedTokenDoc.exists) {
+      res.status(403).json({ message: "Token has already been used" });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
   }
 };
