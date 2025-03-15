@@ -20,7 +20,8 @@ const assignRole = async (token: string, uid: string, role: EmployeeRole) => {
     return response.status;
   } catch (error) {
     if (isAxiosError(error)) {
-      console.log(error.response?.status, error.response?.data);
+      console.log(error.response?.data);
+      throw new Error(error.response?.data.message);
     }
     throw error;
   }

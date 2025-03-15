@@ -13,6 +13,8 @@ export const verifyAccountRequest = async (token: string) => {
   } catch (error) {
     if (isAxiosError(error)) {
       console.log(error.response?.data);
+      alert(error.response?.data.message);
+      return;
     }
     alert((error as Error).message);
   }

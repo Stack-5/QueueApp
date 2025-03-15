@@ -4,31 +4,29 @@ import { useQueueContext } from "@/context/QueueContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { jwtDecode, JwtPayload } from "jwt-decode"; 
+import { useVerifyValidToken } from "@/hooks/useVerifyValidToken";
 
-type DecodedToken = JwtPayload & { queueNumber: number };
+type DecodedToken = JwtPayload & { id: string };
 
 const LoadingComponent = () => {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
-  const { setQueueNumber, setToken } = useQueueContext();
+  
+  useVerifyValidToken(token, router);
+
+  const { setToken } = useQueueContext();
   const [fadeOut, setFadeOut] = useState(false);
 
   const processQueueInformation = async () => {
     if (!token) {
-      console.error("[LoadingComponent] Token is missing.");
+      console.error("[LoadingComponent] Token is invalid or missing.");
       return;
     }
 
     try {
       const decodedToken = jwtDecode<DecodedToken>(token);
-      const queueNumber = decodedToken.queueNumber;
-
-      if (queueNumber) {
-        setQueueNumber(queueNumber);
         setToken(token);
-
-        localStorage.setItem("queueNumber", queueNumber.toString());
         localStorage.setItem("token", token);
 
         setFadeOut(true);
@@ -38,9 +36,6 @@ const LoadingComponent = () => {
         }, 500);
 
         console.log("[LoadingComponent] Decoded token:", decodedToken);
-      } else {
-        console.error("[LoadingComponent] Queue number is not available in token.");
-      }
     } catch (error) {
       console.error("[LoadingComponent] Error decoding token:", error);
       router.replace("/error/unauthorized");
@@ -48,9 +43,8 @@ const LoadingComponent = () => {
   };
 
   useEffect(() => {
-    console.log("test");
     processQueueInformation();
-  }, [router, searchParams, setQueueNumber, setToken, token]);
+  }, []);
 
   return (
     <div

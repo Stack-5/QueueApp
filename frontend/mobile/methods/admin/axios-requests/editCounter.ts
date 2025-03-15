@@ -27,6 +27,8 @@ export const editCounter = async (
   } catch (error) {
     if(isAxiosError(error)) {
       console.log(error.response!.data);
+      throw new Error(error.response?.data.message);
     }
+    throw error;
   }
 };
