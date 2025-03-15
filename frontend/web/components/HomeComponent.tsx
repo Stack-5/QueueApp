@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { submitForm } from "@/utils/submitForm";
 import { useQueueContext } from "@/context/QueueContext";
 import {
   AlertDialog,
@@ -32,154 +31,195 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import notifyQueue from "@/utils/notifyQueue";
+import { useVerifyValidToken } from "@/hooks/useVerifyValidToken";
+import { useRouter } from "next/navigation";
+import Cashier from "@/types/cashier";
+import {
+  computeEstimatedWaitingTime,
+  formatWaitTime,
+} from "@/utils/computeEstimatedWaitingTime";
+import { useGetAvailableCashiers } from "@/hooks/useGetAvailableCashiers";
+import { useAlertMessage } from "@/hooks/useAlertMessage";
+import { handlePhoneInput } from "@/utils/handlePhoneInput";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { queueNumber, token } = useQueueContext();
+  const [phoneNumber, setPhoneNumber] = useState("+63");
+  const { token } = useQueueContext();
   const [fadeIn, setFadeIn] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const router = useRouter();
+  const [page, setPage] = useState(0);
 
-  useEffect(() => {
-    const fetchQueueNotification = async () => {
-      if (!token) {
-        console.warn("[HomeComponent] Token not available yet.");
-        return;
-      }
-
-      try {
-        await notifyQueue(token);
-      } catch (error) {
-        console.error("Failed to notify queue:", error);
-      }
-    };
-    fetchQueueNotification();
-  }, [token]);
+  console.log(token);
+  useVerifyValidToken(token, router);
+  const { cashiers, isAvailableCashierFetching, error } =
+    useGetAvailableCashiers(purpose, token!, router);
+  const { alertMessage, isAlertOpen, setIsAlertOpen } = useAlertMessage(error);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => setFadeIn(true), 100);
 
     return () => clearTimeout(timeoutId);
   }, []);
-
-  const getQueueNumberWithPrefix = (queueNumber: number, purpose: string) => {
-    if (!purpose) return queueNumber.toString();
-    const prefix = purpose.substring(0, 1).toUpperCase();
-    return `${prefix}${queueNumber.toString().padStart(3, "0")}`;
-  };
-
-  const handleSubmit = async () => {
-    if (!purpose || !phoneNumber || !queueNumber) {
-      setAlertMessage("Please fill out all fields.");
-      setIsAlertOpen(true);
-      return;
+  
+  useEffect(() => {
+    if(phoneNumber[3] === "0") {
+      setPhoneNumber(prev => prev.slice(0,3) + prev.slice(4))
     }
+  },[phoneNumber])
 
-    setLoading(true);
+  const LoadingSpinner = () => (
+    <div className="flex justify-center items-center h-40">
+      <div className="w-10 h-10 border-4 border-gray-300 border-t-[#FFBF00] rounded-full animate-spin"></div>
+    </div>
+  );
 
-    try {
-      await submitForm(queueNumber, purpose, phoneNumber, token);
-      setAlertMessage("Form submitted successfully!");
-    } catch {
-      setAlertMessage("Failed to submit form. Please try again.");
-    } finally {
-      setIsAlertOpen(true);
-      setLoading(false);
-    }
-  };
+  const CashierCard = ({ cashier }: { cashier: Cashier }) => (
+    <Card
+      key={cashier.id}
+      className="border-2 border-[#FFC107] shadow-md w-full sm:max-w-lg min-w-[200px] mx-auto"
+    >
+      <CardHeader className="flex flex-col justify-between items-start sm:items-center p-2 sm:p-4">
+        <div className="font-semibold text-sm sm:text-lg">{cashier.name}</div>
+        <div className="text-xs sm:text-sm">
+          Estimated Wait Time:{" "}
+          <span className="text-red-600 font-bold">
+            {formatWaitTime(computeEstimatedWaitingTime(cashier.queueSize))}
+          </span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="px-2 sm:px-4 pb-2 text-xs sm:text-sm">
+        <p>
+          <strong>Location:</strong> {cashier.description}
+        </p>
+        <p>
+          <strong>People in Queue:</strong> {cashier.queueSize}
+        </p>
+      </CardContent>
+
+      <CardFooter className="p-2 sm:p-4 flex justify-center">
+        <Button className="w-full max-w-xs bg-[#0077B6] text-white font-semibold hover:bg-blue-800 text-xs sm:text-sm">
+          Enter Queue
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 
   return (
     <div
-      className={`flex flex-col items-center justify-center h-screen bg-gray-100 p-6 transition-all duration-700 ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6 pb-16 transition-all duration-700 ${
         fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       }`}
     >
-      <h1 className="text-5xl font-bold" style={{ color: "#0077B6" }}>
-        NEU<span style={{ color: "#FFBF00" }}>QUEUE</span>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#0077B6] text-center">
+        NEU<span className="text-[#FFBF00]">QUEUE</span>
       </h1>
-      <p className="text-gray-650 mt-2 text-center font-bold">
+      <p className="text-gray-700 mt-2 text-center font-bold text-sm sm:text-base">
         Thank you for scanning!
       </p>
-      <p className="text-center text-gray-600 max-w-lg mt-2 font-bold">
-        This system helps manage queues efficiently, allowing you to join a
-        virtual line without waiting physically. You’ll receive an SMS
-        notification when it’s your turn. You only have to wait{" "}
-        <span className="text-red-500 font-bold">a couple of minutes</span> at
-        most for you to be served at the cashier.⏳
+      <p className="text-center text-gray-600 max-w-xs sm:max-w-md md:max-w-lg mt-2 font-bold text-xs sm:text-sm md:text-base">
+        Join a virtual queue and receive an SMS when it’s your turn. ⏳{" "}
+        <span className="text-red-500 font-bold">
+          You have 10 minutes to submit the form
+        </span>{" "}
+        or scan the QR code again.
+      </p>
+      <p className="text-gray-600 mt-2 text-center text-xs sm:text-sm md:text-base">
+        Wait for an SMS notification shortly.
       </p>
 
-      <h2 className="text-2xl font-semibold mt-4" style={{ color: "#0077B6" }}>
-        Your queue number is&nbsp;
-        <span className="font-bold">
-          {queueNumber
-            ? `#${getQueueNumberWithPrefix(queueNumber, purpose)}`
-            : "..."}
-        </span>
-        .
-      </h2>
-
-      <p className="text-gray-600 mt-2 text-center">
-        Please wait for an SMS notification, which will be sent to you shortly.
-      </p>
-
-      <Card className="w-[350px] mt-6">
+      {/* Card Section */}
+      <Card className="w-full max-w-md sm:max-w-lg mt-4 min-h-[300px] sm:min-h-[350px] md:min-h-[300px]">
         <CardHeader>
-          <CardTitle>Required section</CardTitle>
+          <CardTitle>
+            {page === 0 ? "Required Section" : "Select a Cashier"}
+          </CardTitle>
           <CardDescription>
-            To proceed, please enter your SMS details.
+            {page === 0
+              ? "Enter your SMS details to proceed."
+              : "Choose an available cashier and confirm."}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="purpose">Purpose</Label>
-              <Select onValueChange={setPurpose}>
-                <SelectTrigger id="purpose" className="border-[#FFBF00]">
-                  <SelectValue placeholder="Select a purpose" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="inquiry">Inquiry</SelectItem>
-                    <SelectItem value="payment">Payment</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+          {page === 0 ? (
+            <div className="grid w-full gap-4">
+              {/* Purpose Selection */}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="purpose">Purpose</Label>
+                <Select onValueChange={setPurpose} value={purpose}>
+                  <SelectTrigger id="purpose" className="border-[#FFBF00]">
+                    <SelectValue placeholder="Select a purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {["payment", "auditing", "clinic", "registrar"].map(
+                        (item) => (
+                          <SelectItem key={item} value={item}>
+                            {item.charAt(0).toUpperCase() + item.slice(1)}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Phone Input */}
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="phone">Cellphone Number (required)</Label>
+                <Input
+                  id="phone"
+                  placeholder="Enter your cellphone number"
+                  className="border-[#FFBF00]"
+                  value={phoneNumber}
+                  onChange={(e) => handlePhoneInput(e, setPhoneNumber)}
+                />
+              </div>
             </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="phone">Cellphone Number (required)</Label>
-              <Input
-                id="phone"
-                placeholder="Enter your cellphone number"
-                className="border-[#FFBF00]"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
+          ) : (
+            <div className="max-w-full sm:max-w-2xl mx-auto mt-1 p-4">
+              <h2 className="text-lg font-bold mb-2">Available Counters:</h2>
+              {isAvailableCashierFetching ? (
+                <LoadingSpinner />
+              ) : (
+                <div className="space-y-4 max-h-80 overflow-y-auto w-full px-2 sm:px-4">
+                  {cashiers.map((cashier) => (
+                    <CashierCard key={cashier.id} cashier={cashier} />
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button
-            className="w-40"
-            style={{ backgroundColor: "#0077B6", color: "#FFBF00" }}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              "Submitting..."
-            ) : (
-              <span className="font-bold">Submit</span>
-            )}
-          </Button>
+
+        {/* Card Footer */}
+        <CardFooter className="flex justify-between">
+          {page === 0 ? (
+            <Button
+              className="w-40 bg-[#0077B6] text-[#FFBF00] font-bold"
+              onClick={() => setPage(1)}
+              disabled={!purpose || phoneNumber.length !== 13}
+            >
+              Proceed
+            </Button>
+          ) : (
+            <Button
+              className="w-20 bg-[#0077B6] text-[#FFBF00] font-bold"
+              onClick={() => setPage(0)}
+            >
+              Back
+            </Button>
+          )}
         </CardFooter>
       </Card>
 
       <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
-        Remember to always check your notifications. Thank you!
+        Always check your notifications. Thank you!
       </p>
 
+      {/* Alert Dialog */}
       <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

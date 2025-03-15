@@ -9,7 +9,7 @@ type DecodedToken = JwtPayload & { queueNumber: number };
 const QueueContext = createContext<QueueContextType | undefined>(undefined);
 
 const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
-  const [queueNumber, setQueueNumber] = useState<number>(0);
+  const [queueNumber, setQueueNumber] = useState<number>(0); // remove later if not used
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,7 +24,6 @@ const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
         if (expiration && expiration < Math.floor(Date.now() / 1000)) {
           console.warn("[QueueProvider] Token expired. Removing from local storage.");
           localStorage.removeItem("token");
-          localStorage.removeItem("queueNumber");
           setToken(null);
           setQueueNumber(0);
         } else {
@@ -33,7 +32,6 @@ const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
       } catch (error) {
         console.error("[QueueProvider] Failed to decode token:", error);
         localStorage.removeItem("token");
-        localStorage.removeItem("queueNumber");
         setToken(null);
         setQueueNumber(0);
       }
