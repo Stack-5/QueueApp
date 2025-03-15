@@ -29,6 +29,19 @@ export const generateQrCode = async (req: Request, res: Response) => {
   }
 };
 
+export const verifyCustomerToken = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(401).json({ message: "The token is invalid or missing"});
+      return;
+    }
+
+    res.status(200).json({message: "The token is valid"});
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
 // Modify req body
 export const addQueue = async (req: QueueRequest, res: Response) => {
   try {
