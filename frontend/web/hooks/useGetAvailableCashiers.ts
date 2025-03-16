@@ -20,7 +20,7 @@ export const useGetAvailableCashiers = (
       try {
         setIsAvailableCashierFetching(true);
         const response = await axios.post(
-          "http://127.0.0.1:5001/retchizu-94b36/us-central1/neu/queue/available-stations",
+          `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/available-stations`,
           {
             purpose: purpose,
           },

@@ -1,49 +1,73 @@
 "use client";
 
-import { useQueueContext } from "@/context/QueueContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { jwtDecode, JwtPayload } from "jwt-decode"; 
-import { useVerifyValidToken } from "@/hooks/useVerifyValidToken";
-
-type DecodedToken = JwtPayload & { id: string };
+import { jwtDecode} from "jwt-decode"; 
+import axios, { isAxiosError } from "axios";
+import { newToken, pendingToken } from "@/types/tokenType";
 
 const LoadingComponent = () => {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
   const router = useRouter();
   
-  useVerifyValidToken(token, router);
 
-  const { setToken } = useQueueContext();
   const [fadeOut, setFadeOut] = useState(false);
 
-  const processQueueInformation = async () => {
-    if (!token) {
-      console.error("[LoadingComponent] Token is invalid or missing.");
+  const processInitialQueueInformation = async () => {
+    const tokenContainer = searchParams.get("token") || localStorage.getItem("token");
+  
+    if (!tokenContainer) {
+      console.warn("[processInitialQueueInformation] No token found. Redirecting to 401.");
+      router.replace("/error/unauthorized");
       return;
     }
-
+  
     try {
-      const decodedToken = jwtDecode<DecodedToken>(token);
-        setToken(token);
-        localStorage.setItem("token", token);
-
-        setFadeOut(true);
-
-        setTimeout(() => {
-          router.replace("/form");
-        }, 500);
-
-        console.log("[LoadingComponent] Decoded token:", decodedToken);
+      // Validate with backend
+      await axios.get(
+        `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/verify-on-mount`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenContainer}`,
+          },
+        }
+      );
+  
+      // Decode token and determine where to redirect
+      const decodedToken = jwtDecode<newToken | pendingToken>(tokenContainer);
+  
+      // Save valid token in storage
+      localStorage.setItem("token", tokenContainer);
+  
+      console.log("[processQueueInformation] Valid token found:", decodedToken);
+  
+      // Redirect based on token type
+      setFadeOut(true);
+      if ("id" in decodedToken) {
+        console.log("[processQueueInformation] Redirecting to /form.");
+        router.replace("/form");
+      } else if ("queueID" in decodedToken && "stationID" in decodedToken) {
+        console.log("[processQueueInformation] Redirecting to /queue-status.");
+        router.replace("/queue-status");
+      } else {
+        console.warn("[processQueueInformation] Unexpected token structure.");
+        router.replace("/error/unauthorized");
+      }
     } catch (error) {
-      console.error("[LoadingComponent] Error decoding token:", error);
-      router.replace("/error/unauthorized");
+      if (isAxiosError(error)) {
+        console.error("[processQueueInformation] Axios error:", error.response?.data.message);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          router.replace("/error/unauthorized");
+        } else {
+          router.replace("/error/internal-server-error");
+        }
+      }
     }
   };
-
+  
   useEffect(() => {
-    processQueueInformation();
+    processInitialQueueInformation();
   }, []);
 
   return (
