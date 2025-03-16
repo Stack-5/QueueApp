@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQueueContext } from "@/context/QueueContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,20 +40,21 @@ import {
 import { useGetAvailableCashiers } from "@/hooks/useGetAvailableCashiers";
 import { useAlertMessage } from "@/hooks/useAlertMessage";
 import { handlePhoneInput } from "@/utils/handlePhoneInput";
+import { enterQueue } from "@/utils/enterQueue";
+import CashierType from "@/types/cashierType";
 
 const HomeComponent = () => {
   const [purpose, setPurpose] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("+63");
-  const { token } = useQueueContext();
   const [fadeIn, setFadeIn] = useState(false);
   const router = useRouter();
   const [page, setPage] = useState(0);
+  const [isEnterQueueLoading, setIsEnterQueueLoading] = useState(false);
 
-  console.log(token);
-  useVerifyValidToken(token, router);
+  const {token} = useVerifyValidToken(router);
   const { cashiers, isAvailableCashierFetching, error } =
     useGetAvailableCashiers(purpose, token!, router);
-  const { alertMessage, isAlertOpen, setIsAlertOpen } = useAlertMessage(error);
+  const { alertMessage, setAlertMessage,isAlertOpen, setIsAlertOpen } = useAlertMessage(error);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => setFadeIn(true), 100);
@@ -99,8 +99,36 @@ const HomeComponent = () => {
       </CardContent>
 
       <CardFooter className="p-2 sm:p-4 flex justify-center">
-        <Button className="w-full max-w-xs bg-[#0077B6] text-white font-semibold hover:bg-blue-800 text-xs sm:text-sm">
-          Enter Queue
+        <Button className="w-full max-w-xs bg-[#0077B6] text-white font-semibold hover:bg-blue-800 text-xs sm:text-sm" 
+        onClick={async () => {
+          try {
+            setIsEnterQueueLoading(true);
+            const {queueToken, queueID} = await enterQueue(purpose as CashierType, phoneNumber, cashier.id, token!);
+            localStorage.setItem("token", queueToken);
+            localStorage.setItem("queueID", queueID);
+            console.log("token new", queueToken);
+            router.replace("/queue-status");
+          } catch (error) {
+            const submitErrorMessage = (error as Error).message;
+            if (submitErrorMessage === "unauthorized") {
+              router.replace("/error/unauthorized"); // Redirect to custom 401 page
+              return;
+            }
+            
+            if (submitErrorMessage === "server-error") {
+              router.replace("/error/internal-server-error"); // Redirect to custom 500 page
+              return;
+            }
+            setAlertMessage(submitErrorMessage);
+            setIsAlertOpen(true);
+          } finally {
+            setIsEnterQueueLoading(false);
+          }
+        }}
+        >
+           {isEnterQueueLoading ?  <div className="flex justify-center items-center h-40">
+      <div className="w-5 h-5 border-4 border-gray-300 border-t-[#FFBF00] rounded-full animate-spin"></div>
+    </div> : "Enter Queue"}
         </Button>
       </CardFooter>
     </Card>

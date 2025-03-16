@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 
-export const useAlertMessage = (error: string | null) => {
+export const useAlertMessage = (message: string | null) => {
  const [alertMessage, setAlertMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
  
  useEffect(() => {
-  if(!error) return;
-  setAlertMessage(error);
+  if(!message) return;
+  setAlertMessage(message);
   setIsAlertOpen(true)
- }, [error])
+ }, [message])
 
- return {alertMessage, isAlertOpen, setIsAlertOpen}
+ return {alertMessage, isAlertOpen, setAlertMessage, setIsAlertOpen}
 }

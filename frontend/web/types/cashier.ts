@@ -1,4 +1,4 @@
-import CashierType from "./CashierType";
+import CashierType from "./cashierType";
 
 type Cashier = {
   id: string;

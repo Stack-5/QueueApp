@@ -4,28 +4,30 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { QueueContextType } from "@/types/QueueContextType";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 
-type DecodedToken = JwtPayload & { queueNumber: number };
+//
+// Remove this in next commit
 
 const QueueContext = createContext<QueueContextType | undefined>(undefined);
 
 const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
-  const [queueNumber, setQueueNumber] = useState<number>(0); // remove later if not used
+  const [queueID, setQueueID] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    const storedQueueNumber = localStorage.getItem("queueNumber");
+    const storedQueueID = localStorage.getItem("queueID");
 
     if (storedToken) {
       try {
-        const decodedToken = jwtDecode<DecodedToken>(storedToken);
+        const decodedToken = jwtDecode<JwtPayload>(storedToken);
         const expiration = decodedToken.exp;
 
         if (expiration && expiration < Math.floor(Date.now() / 1000)) {
           console.warn("[QueueProvider] Token expired. Removing from local storage.");
           localStorage.removeItem("token");
           setToken(null);
-          setQueueNumber(0);
+          setQueueID(null);
         } else {
           setToken(storedToken);
         }
@@ -33,17 +35,18 @@ const QueueProvider : React.FC<{children: ReactNode}> = ({children}) =>{
         console.error("[QueueProvider] Failed to decode token:", error);
         localStorage.removeItem("token");
         setToken(null);
-        setQueueNumber(0);
+        setQueueID(null);
       }
     }
 
-    if (storedQueueNumber) {
-      setQueueNumber(Number(storedQueueNumber));
+    if (storedQueueID) {
+      setQueueID(storedQueueID);
     }
+    setLoading(false);
   }, []);
 
   return (
-    <QueueContext.Provider value={{ queueNumber, setQueueNumber, token, setToken }}>
+    <QueueContext.Provider value={{ queueID, setQueueID, token, setToken, loading}}>
       {children}
     </QueueContext.Provider>
   );
