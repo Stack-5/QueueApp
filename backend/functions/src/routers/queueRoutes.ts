@@ -6,6 +6,7 @@ import {
   getAvailableStation,
   getLatestQueueIDs,
   getQueuePosition,
+  getStationInfo,
   verifyCustomerToken,
 } from "../controllers/queueControllers";
 
@@ -15,8 +16,9 @@ const router: Router = Router();
 router.get("/qrcode", generateQrCode);
 router.post("/add", verifyValidQueueJWT, verifyUsedToken, addQueue);
 router.post("/available-stations", verifyValidQueueJWT, verifyUsedToken, getAvailableStation);
-router.post("/queue-position", verifyValidQueueJWT, getQueuePosition);
+router.get("/queue-position", verifyValidQueueJWT, getQueuePosition);
 router.get("/get-latest", verifyValidQueueJWT, getLatestQueueIDs);
 router.get("/verify-on-mount", verifyValidQueueJWT, verifyCustomerToken);
+router.get("/station-info", verifyValidQueueJWT, getStationInfo);
 
 export default router;
