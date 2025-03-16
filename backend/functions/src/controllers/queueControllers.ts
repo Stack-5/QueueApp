@@ -32,11 +32,11 @@ export const generateQrCode = async (req: Request, res: Response) => {
 export const verifyCustomerToken = async (req: QueueRequest, res: Response) => {
   try {
     if (!req.token) {
-      res.status(401).json({ message: "The token is invalid or missing"});
+      res.status(401).json({ message: "The token is invalid or missing" });
       return;
     }
 
-    res.status(200).json({message: "The token is valid"});
+    res.status(200).json({ message: "The token is valid" });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
@@ -52,7 +52,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
     const parsedBody = addToQueueSchema.parse(req.body);
     const { purpose, cellphoneNumber, timestamp, customerStatus, stationID } =
       parsedBody;
-    const queueDocRef = firestoreDb.collection("queue-numbers").doc(stationID);
+    const queueDocRef = firestoreDb.collection("queue-numbers").doc(purpose);
     const queueCollectionRef = firestoreDb.collection("queue");
     const invalidTokenRef = firestoreDb
       .collection("invalid-token")
@@ -263,7 +263,6 @@ export const getLatestQueueIDs = async (req: QueueRequest, res: Response) => {
       stationID: string;
     };
 
-
     const { queueID, stationID } = decodedToken;
     const queueCollectionRef = firestoreDb.collection("queue");
 
@@ -288,6 +287,42 @@ export const getLatestQueueIDs = async (req: QueueRequest, res: Response) => {
       res.status(401).json({ message: "Invalid or expired token" });
       return;
     }
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const getStationInfo = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+
+    if (!SECRET_KEY) {
+      throw new Error("Missing Secret Key in environment variables!");
+    }
+
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {
+      algorithms: ["HS256"],
+    }) as {
+      queueID: string; // This is the document ID (e.g., "R002")
+      stationID: string;
+    };
+
+    const { stationID } = decodedToken;
+    if (!stationID) {
+      res.status(403).json({message: "Invalid or missing tokens"});
+      return;
+    }
+    const stationRef = realtimeDb.ref(`stations/${stationID}`);
+    const stationSnapshot = await stationRef.get();
+    if (!stationSnapshot.exists()) {
+      res.status(404).json({ message: "Station not found" });
+      return;
+    }
+    const { name, description } = stationSnapshot.val();
+    res.status(200).json({ stationInfo: { name, description } });
+  } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
 };
