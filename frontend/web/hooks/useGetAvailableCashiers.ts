@@ -1,5 +1,7 @@
+import { realtimeDb } from "@/firebaseConfig";
 import Cashier from "@/types/cashier";
 import axios, { isAxiosError } from "axios";
+import { onValue, ref } from "firebase/database";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useEffect, useState } from "react";
 
@@ -14,7 +16,7 @@ export const useGetAvailableCashiers = (
   const [error, setError] = useState<string | null>(null);
   console.log(purpose)
   useEffect(() => {
-    // Simulated API call - Replace with real API
+    const currentServingRef = ref(realtimeDb, `current-serving`);
     const getAvailableCashiers = async () => {
       if (purpose.length === 0) return;
       try {
@@ -48,8 +50,13 @@ export const useGetAvailableCashiers = (
         setIsAvailableCashierFetching(false);
       }
     };
-    getAvailableCashiers();
-    // setCashiers(["Cashier 1", "Cashier 2", "Cashier 3", "Cashier 4", "Cashier 5", "Cashier 6"]);
+    
+    const unsubscribe = onValue(currentServingRef, () => {
+      getAvailableCashiers();
+    })
+
+    return () => unsubscribe();
+
   }, [purpose]);
 
   return {

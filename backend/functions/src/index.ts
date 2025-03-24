@@ -2,13 +2,12 @@ import * as v2 from "firebase-functions/v2";
 import express, { Express } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import "./services/realtimeDatabaseService";
 import routes from "./routes";
 
 dotenv.config();
 const app: Express = express();
 
-const allowedOrigins = ["http://localhost:3000", process.env.NEUQUEUE_ROOT_URL];
+const allowedOrigins = ["http://localhost:3000", "https://localhost:3000", process.env.NEUQUEUE_ROOT_URL];
 
 app.use(
   cors({

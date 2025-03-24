@@ -7,8 +7,8 @@ export const formatWaitTime = (totalMinutes: number) => {
   const minutes = totalMinutes % 60;
 
   if (hours > 0) {
-    return `${hours}h ${minutes}m`; // Example: "1h 30m"
+    return `${hours} hour ${minutes} minutes`; // Example: "1h 30m"
   } else {
-    return `${minutes}m`; // Example: "45m"
+    return `${minutes} minutes`; // Example: "45m"
   }
 };

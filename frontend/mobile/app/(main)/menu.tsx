@@ -12,8 +12,6 @@ import { useUserContext } from "@contexts/UserContext";
 const MainMenuScreen = () => {
   const { userInfo, userToken } = useUserContext();
 
-  console.log(userToken);
-
   return (
     <View
       style={{
@@ -30,43 +28,33 @@ const MainMenuScreen = () => {
         }}
       />
       <View style={{ paddingHorizontal: wp(10) }}>
-        {userInfo?.role === "information" ? (
-          <>
-            <NeuMainMenuButton
-              title="Display QR Code"
-              buttonFn={() => router.push("/qrcode")}
-            />
-            <NeuMainMenuButton
-              title="Settings"
-              buttonFn={() => {
-                router.push("information/settings");
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <NeuMainMenuButton
-              title="Enter Cashier"
-              buttonFn={() => {
-                router.push("/main");
-              }}
-            />
-            <NeuMainMenuButton
-              title="Display QR Code"
-              buttonFn={() => router.push("/qrcode")}
-            />
-            <NeuMainMenuButton
-              title="Settings"
-              buttonFn={() => {
-                if (userInfo?.role === "admin" || userInfo?.role === "superAdmin") {
-                  router.push("admin/settings");
-                } else if (userInfo?.role === "cashier") {
-                  router.push("cashier/settings");
-                }
-              }}
-            />
-          </>
+        {/* Enter Cashier - Only for Cashier role */}
+        {userInfo?.role === "cashier" && (
+          <NeuMainMenuButton
+            title="Enter Cashier"
+            buttonFn={() => router.push("cashier/serve")}
+          />
         )}
+        {/* Display QR Code - Always available */}
+        <NeuMainMenuButton
+          title="Display QR Code"
+          buttonFn={() => router.push("/qrcode")}
+        />
+
+        {/* Settings - Route to respective settings page */}
+        <NeuMainMenuButton
+          title="Settings"
+          buttonFn={() => {
+            const roleSettings = {
+              admin: "admin/settings",
+              superAdmin: "admin/settings",
+              cashier: "cashier/settings",
+              information: "information/settings",
+            };
+            const role = userInfo?.role as keyof typeof roleSettings;
+            router.push(roleSettings[role]);
+          }}
+        />
       </View>
     </View>
   );

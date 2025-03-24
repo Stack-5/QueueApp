@@ -15,5 +15,5 @@ if (!admin.apps.length) {
 const realtimeDb = admin.database();
 const firestoreDb = admin.firestore();
 const auth = admin.auth();
-
-export {realtimeDb, firestoreDb, auth};
+const fcm = admin.messaging();
+export {realtimeDb, firestoreDb, auth, fcm};

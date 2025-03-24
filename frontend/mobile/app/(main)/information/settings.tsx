@@ -53,12 +53,6 @@ const CashierSettings = () => {
         >
           {userInfo?.name}
         </Text>
-
-        <NeuQueueSettingsButton
-          iconName="information-variant"
-          label="Account Information"
-          onPress={() => router.push("/information/info-info")}
-        />
         <NeuQueueButtonYellow
           title="Sign out"
           buttonFn={async () => {

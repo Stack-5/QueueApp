@@ -113,6 +113,7 @@ const AddStationScreen = () => {
           setStationType={setStationType}
           isStationTypeOptionVisible={isStationTypeOptionVisible}
           setIsStationTypeOptionVisible={setIsStationTypeOptionVisible}
+          isAdd={true}
         />
 
         <View style={{ marginTop: hp(3) }}>
