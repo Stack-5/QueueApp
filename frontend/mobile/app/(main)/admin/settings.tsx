@@ -16,8 +16,6 @@ import { adminOptions, optionMethods } from "@methods/admin/adminOptions";
 const AdminSettingsScreen = () => {
   useSignOutAuthStateListener();
   const router = useRouter();
-  const [isCashier, setIsCashier] = useState(false);
-  const toggleSwitch = () => setIsCashier((prev) => !prev);
   const { userInfo } = useUserContext();
 
   return (

@@ -1,15 +1,18 @@
-import { View, Text } from "react-native";
-import React from "react";
+import { View, Text, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { useUserContext } from "@contexts/UserContext";
 import { useRouter } from "expo-router";
+import axios, { isAxiosError } from "axios";
+import { useGetCashierInformation } from "@hooks/data-fetching-hooks/useGetCashierInformation";
 
-const CashierInfo = () => {
+const CashierInfoScreen = () => {
   const router = useRouter();
-  const { userInfo } = useUserContext();
+  const { userInfo, userToken } = useUserContext();
+  const {cashierInfo, isGetCashierEmployeeInformationLoading} = useGetCashierInformation(userToken);
   return (
     <View
       style={{ flex: 1, backgroundColor: "#F9FAFB", paddingHorizontal: wp(1) }}
@@ -51,22 +54,28 @@ const CashierInfo = () => {
             padding: hp(2),
           }}
         >
-          <Text
-            style={{
-              fontFamily: "lexendregular",
-              fontSize: wp(4),
-              marginBottom: hp(3),
-            }}
-          >
-            Station:
-          </Text>
-          <Text style={{ fontFamily: "lexendregular", fontSize: wp(4) }}>
-            Location:{" "}
-          </Text>
+          {isGetCashierEmployeeInformationLoading ? (
+            <ActivityIndicator size={wp(5)} />
+          ) : (
+            <>
+              <Text
+                style={{
+                  fontFamily: "lexendregular",
+                  fontSize: wp(4),
+                  marginBottom: hp(3),
+                }}
+              >
+                Station: {cashierInfo.stationName}
+              </Text>
+              <Text style={{ fontFamily: "lexendregular", fontSize: wp(4) }}>
+                Counter: {cashierInfo.counterNumber}
+              </Text>
+            </>
+          )}
         </View>
       </View>
     </View>
   );
 };
 
-export default CashierInfo;
+export default CashierInfoScreen;

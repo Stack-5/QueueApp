@@ -6,6 +6,9 @@ import { addToQueueSchema } from "../zod-schemas/addToQueue";
 import QueueRequest from "../types/QueueRequest";
 import { v4 as uuidv4 } from "uuid";
 import CashierType from "../types/CashierType";
+import Counter from "../types/Counter";
+import { sendNotification } from "../utils/sendNotification";
+import Customer from "../types/Customer";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
@@ -111,7 +114,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         }
 
         const queueToken = jwt.sign(
-          { queueID: queueIDWithPrefix, stationID },
+          { queueID: queueIDWithPrefix, stationID, cellphoneNumber },
           SECRET_KEY,
           { expiresIn: "10h" }
         );
@@ -139,7 +142,8 @@ export const getAvailableStation = async (req: QueueRequest, res: Response) => {
   try {
     const { purpose }: { purpose: CashierType } = req.body;
     if (!SECRET_KEY || !NEUQUEUE_ROOT_URL) {
-      throw new Error("Missing Secret in environmental variables!");
+      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      return;
     }
     const stationRef = realtimeDb.ref("stations");
     const stationSnapshot = await stationRef.get();
@@ -173,6 +177,7 @@ export const getAvailableStation = async (req: QueueRequest, res: Response) => {
           const queueCollectionRef = firestoreDb.collection("queue");
           const queueSnapshot = await queueCollectionRef
             .where("stationID", "==", station.id)
+            .where("customerStatus", "in", ["ongoing", "pending"])
             .get();
           return { ...station, queueSize: queueSnapshot.size };
         })
@@ -195,14 +200,17 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
     }
 
     if (!SECRET_KEY) {
-      throw new Error("Missing Secret in environmental variables!");
+      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      return;
     }
     const decodedToken = jwt.verify(req.token, SECRET_KEY, {
       algorithms: ["HS256"],
     }) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
+      cellphoneNumber: string;
     };
+
 
     const { queueID, stationID } = decodedToken;
     if (!queueID && !stationID) {
@@ -219,12 +227,16 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       res.status(404).json({ message: "Invalid queue data" });
       return;
     }
-    if (customerData.customerStatus !== "pending") {
+    if (customerData.customerStatus === "ongoing") {
+      res.status(200).json({ position: 0, message: "You are now being served!" });
+      return;
+    }
+    /*     if (customerData.customerStatus !== "pending") {
       res
         .status(400)
         .json({ message: "Your queue has already been completed" });
       return;
-    }
+    } */
     const customerQueueTimestamp = customerData.timestamp;
     const queueSnapshot = await firestoreDb
       .collection("queue")
@@ -245,48 +257,116 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
   }
 };
 
-export const getLatestQueueIDs = async (req: QueueRequest, res: Response) => {
+export const notifyOnSuccessScan = async (req: QueueRequest, res: Response) => {
   try {
     if (!req.token) {
       res.status(400).json({ message: "Missing token" });
       return;
     }
 
-    if (!SECRET_KEY) {
-      throw new Error("Missing Secret Key in environment variables!");
+    const currentLoadedQueueRef = firestoreDb
+      .collection("loaded-token")
+      .doc(req.token);
+    const notifyOnSuccessRef = realtimeDb.ref("notify-toggle");
+
+    await firestoreDb.runTransaction(async (transaction) => {
+      const currentLoadedQueueData = await transaction.get(
+        currentLoadedQueueRef
+      );
+
+      if (currentLoadedQueueData.exists) {
+        throw new Error("This token already notified"); // Will be caught later
+      }
+
+      transaction.set(currentLoadedQueueRef, { timestamp: Date.now() });
+    });
+
+    const result = await notifyOnSuccessRef.transaction((currentValue) => {
+      return currentValue === 1 ? 0 : 1;
+    });
+
+    if (!result.committed) {
+      res.status(500).json({ message: "Transaction failed" });
+      return;
     }
 
+    res
+      .status(200)
+      .json({
+        message: "Toggled successfully",
+        newValue: result.snapshot.val(),
+      });
+  } catch (error) {
+    if ((error as Error).message === "This token already notified") {
+      res.status(200).json({ message: "This token already notified" });
+      return;
+    }
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const leaveQueue = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+    if (!SECRET_KEY) {
+      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      return;
+    }
     const decodedToken = jwt.verify(req.token, SECRET_KEY, {
       algorithms: ["HS256"],
     }) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
+      cellphoneNumber: string;
     };
-
-    const { queueID, stationID } = decodedToken;
-    const queueCollectionRef = firestoreDb.collection("queue");
-
-    // 🔍 Fetch the latest 6 pending queue IDs for the given station
-    const queueSnapshot = await queueCollectionRef
-      .where("stationID", "==", stationID)
-      .where("customerStatus", "==", "pending")
-      .orderBy("timestamp", "asc")
-      .limit(6)
-      .get();
-
-    const queueIDs = queueSnapshot.docs.map((doc) => doc.id); // Extract queue IDs
-
-    // Ensure the requested customer's queue ID is included
-    if (!queueIDs.includes(queueID)) {
-      queueIDs.push(queueID);
-    }
-
-    res.status(200).json({ queueIDs });
+    const { queueID, cellphoneNumber } = decodedToken;
+    const queueRef = firestoreDb.collection("queue").doc(queueID);
+    await queueRef.delete();
+    const invalidTokenRef = firestoreDb
+      .collection("invalid-token")
+      .doc(req.token);
+    await invalidTokenRef.set({ cellphoneNumber, timestamp: Date.now() });
+    res.status(200).json({ message: "Successfully left the queue" });
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).json({ message: "Invalid or expired token" });
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const displayCurrentServing = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
       return;
     }
+    if (!SECRET_KEY) {
+      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      return;
+    }
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {algorithms: ["HS256"]}) as {
+      queueID: string; // This is the document ID (e.g., "R002")
+      stationID: string;
+      cellphoneNumber: string;
+    };
+
+    const {stationID} = decodedToken;
+
+    const countersRef = realtimeDb.ref("counters");
+    const snapshot = await countersRef.orderByChild("stationID").equalTo(stationID).once("value");
+
+    if (!snapshot.exists()) {
+      res.status(404).json({ message: "No counters found for the given stationID" });
+    }
+
+    const counters: Record<string, Counter> = snapshot.val();
+    const servingCounters = Object.values(counters)
+      .filter((counter) => counter.serving && counter.serving.trim() !== "")
+      .map(({ counterNumber, serving }) => ({ counterNumber, serving }));
+
+    res.status(200).json({servingCounters});
+  } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
 };
@@ -323,6 +403,151 @@ export const getStationInfo = async (req: QueueRequest, res: Response) => {
     const { name, description } = stationSnapshot.val();
     res.status(200).json({ stationInfo: { name, description } });
   } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const storeFCMToken = async (req: QueueRequest, res: Response) => {
+  try {
+    const {fcmToken} = req.body;
+    if (!fcmToken) {
+      res.status(400).json({message: "FCM token is missing!"});
+      return;
+    }
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+
+    if (!SECRET_KEY) {
+      throw new Error("Missing Secret Key in environment variables!");
+    }
+
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {
+      algorithms: ["HS256"],
+    }) as {
+      queueID: string; // This is the document ID (e.g., "R002")
+      stationID: string;
+    };
+    const {queueID} = decodedToken;
+    const fcmDoc = firestoreDb.collection("fcm-tokens").doc(queueID);
+    await fcmDoc.set({
+      fcmToken: fcmToken,
+    }, {merge: true});
+    res.status(200).json({ message: "FCM token stored successfully" });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message});
+  }
+};
+
+export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+
+    if (!SECRET_KEY) {
+      throw new Error("Missing Secret Key in environment variables!");
+    }
+
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {
+      algorithms: ["HS256"],
+    }) as {
+      queueID: string; // This is the document ID (e.g., "R002")
+      stationID: string;
+    };
+
+    const {stationID} = decodedToken;
+    // Fetch the queue sorted by `timestamp` (FIFO)
+    const queueSnapshot = await firestoreDb
+      .collection("queue")
+      .where("stationID", "==", stationID)
+      .where("customerStatus", "==", "pending") // Only pending customers
+      .orderBy("timestamp", "asc")
+      .limit(4)
+      .get();
+
+    const queueList = queueSnapshot.docs.map((doc) => ({
+      queueIDP: doc.id,
+      ...doc.data(),
+    })) as Array<Customer & { queueIDP: string }>;
+    // Fetch previously notified customers
+    const notifiedSnapshot = await firestoreDb
+      .collection("notifications")
+      .doc(stationID)
+      .get();
+
+    const previouslyNotified = notifiedSnapshot.exists ? notifiedSnapshot.data()?.notifiedCustomers || [] : [];
+
+    // Identify newly added customers to the top 4
+    const newNotified = queueList.map((customer) => customer.queueIDP);
+    const customersToNotify = newNotified.filter((id) => !previouslyNotified.includes(id));
+
+    // Send notifications only to the new customers
+    for (const queueIDP of customersToNotify) {
+      const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueIDP).get();
+      if (fcmDoc.exists) {
+        const fcmToken = fcmDoc.data()?.fcmToken;
+        if (fcmToken) {
+          await sendNotification(fcmToken, "You are in the top 4!", "Please be ready for your turn.");
+        }
+      }
+    }
+
+    // Update notified customers in Firestore
+    await firestoreDb.collection("notifications").doc(stationID).set({
+      notifiedCustomers: newNotified,
+    });
+
+    res.status(200).json({ message: "Notifications sent successfully" });
+  } catch (error) {
+    console.error("Error notifying queue:", error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+
+    if (!SECRET_KEY) {
+      throw new Error("Missing Secret Key in environment variables!");
+    }
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {
+      algorithms: ["HS256"],
+    }) as {
+      queueID: string; // This is the document ID (e.g., "R002")
+      stationID: string;
+    };
+    const {queueID} = decodedToken;
+    const queueDoc = await firestoreDb.collection("queue").doc(queueID).get();
+    if (!queueDoc.exists) {
+      res.status(404).json({ message: "Queue not found" });
+      return;
+    }
+
+    const customerData = queueDoc.data();
+    if (customerData?.customerStatus !== "ongoing") {
+      res.status(400).json({ message: "Customer is not serving yet" });
+      return;
+    }
+
+    // Get FCM token for the customer
+    const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueID).get();
+    if (fcmDoc.exists) {
+      const fcmToken = fcmDoc.data()?.fcmToken;
+      if (fcmToken) {
+        await sendNotification(fcmToken, "It's your turn!", "Please proceed to the counter.");
+      }
+    }
+
+    res.status(200).json({ message: "Currently serving notification sent" });
+  } catch (error) {
+    console.error("Error notifying serving customer:", error);
     res.status(500).json({ message: (error as Error).message });
   }
 };

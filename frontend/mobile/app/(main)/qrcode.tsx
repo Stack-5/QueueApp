@@ -17,7 +17,6 @@ const QRCodeScreen = () => {
 
   const fetchQRCode = async () => {
     try {
-      `${CUID_REQUEST_URL}/queue/qrcode`
       const response = await axios.get(
         `${CUID_REQUEST_URL}/queue/qrcode`
       );
@@ -32,9 +31,10 @@ const QRCodeScreen = () => {
   };
 
   useEffect(() => {
-    fetchQRCode();
-    const currentQueueNumberRef = ref(realtimeDb, "current-queue-number");
-    const unsubscribe = onValue(currentQueueNumberRef, () => {
+    const notifyToggleRef = ref(realtimeDb, "notify-toggle");
+    const unsubscribe = onValue(notifyToggleRef, (snapshot) => {
+      console.log(snapshot.val())
+      console.log("did run")
       fetchQRCode();
     });
     return () => unsubscribe();

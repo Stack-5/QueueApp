@@ -9,6 +9,6 @@ export const addToQueueSchema = object({
     "Invalid phone number format. Use +63XXXXXXXXXX"
   ),
   timestamp: number().default(() => Date.now()),
-  customerStatus: zEnum(["pending", "complete"]).default("pending"),
+  customerStatus: zEnum(["pending", "ongoing", "complete"]).default("pending"),
   stationID: string(),
 });

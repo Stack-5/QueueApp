@@ -162,6 +162,7 @@ const EditStationScreen = () => {
           setStationType={setStationType}
           isStationTypeOptionVisible={isStationTypeOptionVisible}
           setIsStationTypeOptionVisible={setIsStationTypeOptionVisible}
+          isAdd={false}
         />
 
         {hasChanges && (
@@ -190,6 +191,7 @@ const EditStationScreen = () => {
                   alert(`${stationInfo.name} is successfully updated`);
                 } catch (error) {
                   alert((error as Error).message);
+                  
                 } finally {
                   setIsEditStationLoading(false);
                 }

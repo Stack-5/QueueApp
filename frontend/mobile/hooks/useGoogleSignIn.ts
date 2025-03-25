@@ -21,9 +21,9 @@ export const useGoogleSignIn = (
       const firebaseToken = await userCredential.user.getIdToken();
       const response = await verifyAccountRequest(firebaseToken);
       setIsVerified(true);
-      setUserInfo(response!.data.user);
+      setUserInfo(response.user);
       setUserToken(firebaseToken);
-      console.log("this is the role in sign in", response!.data.user.role);
+      console.log("this is the role in sign in", response!.user.role);
     } catch (error) {
       if (isAxiosError(error) && error.response) {
         if (error.response.status === 403) {

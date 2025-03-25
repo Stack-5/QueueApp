@@ -4,6 +4,7 @@ import stationRoutes from "../routers/stationRoutes";
 import counterRoutes from "../routers/counterRoutes";
 import adminRoutes from "../routers/adminRoutes";
 import userRoutes from "../routers/userRoutes";
+import cashierRoutes from "../routers/cashierRoutes";
 
 // eslint-disable-next-line new-cap
 const router = Router();
@@ -17,5 +18,6 @@ router.use("/user", userRoutes);
 router.use("/station", stationRoutes);
 router.use("/counter", counterRoutes);
 router.use("/admin", adminRoutes);
+router.use("/cashier", cashierRoutes);
 
 export default router;

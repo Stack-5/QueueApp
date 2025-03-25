@@ -81,9 +81,6 @@ export const assignUserRole = async (req: AuthRequest, res: Response) => {
       res.status(403).json({ message: "Unauthorized to assign this role" });
       return;
     }
-
-    await auth.setCustomUserClaims(uid, { role: role });
-    await auth.revokeRefreshTokens(uid);
     const userRef = realtimeDb.ref(`users/${uid}`);
     const snapshot = await userRef.get();
 
@@ -131,6 +128,9 @@ export const assignUserRole = async (req: AuthRequest, res: Response) => {
         return;
       }
     }
+
+    await auth.setCustomUserClaims(uid, { role: role });
+    await auth.revokeRefreshTokens(uid);
 
     await userRef.set({
       role: role,

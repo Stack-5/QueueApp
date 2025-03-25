@@ -6,6 +6,7 @@ const NeuQueueButtonYellow = ({
   title,
   buttonFn,
   loading,
+  disable
 }: CommonButtonProps) => {
   return (
     <TouchableOpacity
@@ -16,7 +17,7 @@ const NeuQueueButtonYellow = ({
       }}
       activeOpacity={0.8}
       onPress={buttonFn}
-      disabled={loading}
+      disabled={loading || disable}
     >
       {loading ? (
         <ActivityIndicator size={wp(7)} color={"#F9FAFB"} />

@@ -35,6 +35,7 @@ type StationConfigProp = {
   setStationType: Dispatch<SetStateAction<StationType>>;
   isStationTypeOptionVisible: boolean;
   setIsStationTypeOptionVisible: Dispatch<SetStateAction<boolean>>;
+  isAdd: boolean;
 };
 
 const StationConfig = ({
@@ -46,6 +47,7 @@ const StationConfig = ({
   setIsActivated,
   isStationTypeOptionVisible,
   setIsStationTypeOptionVisible,
+  isAdd,
 }: StationConfigProp) => {
   const [draftStationType, setDraftStationType] =
     useState<StationType>(stationType);
@@ -80,16 +82,16 @@ const StationConfig = ({
         activeOpacity={1}
         onPress={() => handleFocus()}
       >
-          <TextInput
-            ref={descriptionRef}
-            style={styles.textInput}
-            multiline={true}
-            value={stationInfo.description}
-            onChangeText={(text) =>
-              handleTextInputChange(setStationInfo, "description", text)
-            }
-            scrollEnabled={true}
-          />
+        <TextInput
+          ref={descriptionRef}
+          style={styles.textInput}
+          multiline={true}
+          value={stationInfo.description}
+          onChangeText={(text) =>
+            handleTextInputChange(setStationInfo, "description", text)
+          }
+          scrollEnabled={true}
+        />
       </TouchableOpacity>
 
       <View
@@ -131,20 +133,22 @@ const StationConfig = ({
         </TouchableOpacity>
       </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingTop: hp(4),
-        }}
-      >
-        <Text style={styles.label}>Activate/Deactivate</Text>
-        <Switch
-          value={isActivated}
-          onValueChange={(value) => setIsActivated(value)}
-        />
-      </View>
+      {!isAdd ? (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingTop: hp(4),
+          }}
+        >
+          <Text style={styles.label}>Activate/Deactivate</Text>
+          <Switch
+            value={isActivated}
+            onValueChange={(value) => setIsActivated(value)}
+          />
+        </View>
+      ) : null}
 
       <Modal
         transparent
