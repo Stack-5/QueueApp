@@ -53,8 +53,9 @@ const QueueStatus = () => {
     decodedToken as pendingToken
   );
 
+  console.log(queuePosition)
   useEffect(() => {
-    if(!token) return;
+    if (!token) return;
     const fcmToken = localStorage.getItem("fcmtoken");
     console.log("fcmtoken", fcmToken);
     const saveFcmToken = async () => {
@@ -86,7 +87,11 @@ const QueueStatus = () => {
     const notifyCustomer = async () => {
       try {
         if (queuePosition === 0) {
-          notifyCurrentServing(token);
+          await notifyCurrentServing(
+            token,
+            currentServing.find((counter) => counter.serving === queueID)
+              ?.counterNumber || null
+          );
           setAlertMessage(
             `Please proceed to Counter ${
               currentServing.find((counter) => counter.serving === queueID)
@@ -95,7 +100,7 @@ const QueueStatus = () => {
           );
           setIsAlertOpen(true);
         } else if (queuePosition && queuePosition <= 4 && queuePosition > 0) {
-          notifyTop4(token);
+          await notifyTop4(token);
           setAlertMessage(
             `You're getting close! You're now in position ${queuePosition}. Please be prepared.`
           );
@@ -209,11 +214,14 @@ const QueueStatus = () => {
           </Button>
 
           <div className="mt-6">
-            <p className="text-base font-medium text-gray-700 text-center mb-2">
+            <p className="text-base font-medium text-gray-700 text-lg text-center mb-2">
               Thank you for your patience.
             </p>
-            <p className="text-base font-medium text-gray-700 text-center">
+            <p className="text-base font-medium text-gray-700 text-lg text-center">
               Have a wonderful day!
+            </p>
+            <p className="text-base font-medium text-sm text-gray-700 text-center mt-10">
+              Not receiving an email? Check your spam emails.
             </p>
           </div>
         </>
