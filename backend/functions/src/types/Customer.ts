@@ -1,5 +1,5 @@
 type Customer = {
-  cellphoneNumber: string;
+  email: string;
   customerStatus: "pending" | "ongoing" | "served"; // Define possible statuses
   purpose: string;
   queueID: number;

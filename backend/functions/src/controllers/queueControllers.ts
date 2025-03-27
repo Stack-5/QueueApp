@@ -9,6 +9,7 @@ import CashierType from "../types/CashierType";
 import Counter from "../types/Counter";
 import { sendNotification } from "../utils/sendNotification";
 import Customer from "../types/Customer";
+import { sendEmail } from "../utils/sendEmail";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
@@ -53,7 +54,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
       return;
     }
     const parsedBody = addToQueueSchema.parse(req.body);
-    const { purpose, cellphoneNumber, timestamp, customerStatus, stationID } =
+    const { purpose, email, timestamp, customerStatus, stationID } =
       parsedBody;
     const queueDocRef = firestoreDb.collection("queue-numbers").doc(purpose);
     const queueCollectionRef = firestoreDb.collection("queue");
@@ -70,9 +71,9 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
     }
 
     const existingQueueSnapshot = await queueCollectionRef
-      .where("cellphoneNumber", "==", cellphoneNumber)
+      .where("email", "==", email)
       .where("stationID", "==", stationID)
-      .where("customerStatus", "==", "pending") // Only check if they are still in the queue
+      .where("customerStatus", "in", ["pending", "ongoing"]) // Only check if they are still in the queue
       .get();
 
     if (!existingQueueSnapshot.empty) {
@@ -103,7 +104,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         const payload = {
           queueID: queueNum,
           purpose,
-          cellphoneNumber,
+          email,
           customerStatus,
           timestamp: Date.now(),
           stationID: stationID,
@@ -114,16 +115,16 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         }
 
         const queueToken = jwt.sign(
-          { queueID: queueIDWithPrefix, stationID, cellphoneNumber },
+          { queueID: queueIDWithPrefix, stationID, email },
           SECRET_KEY,
           { expiresIn: "10h" }
         );
         transaction.set(queueCollectionRef.doc(queueIDWithPrefix), payload);
-        transaction.set(invalidTokenRef, { cellphoneNumber, timestamp });
+        transaction.set(invalidTokenRef, { email, timestamp });
         const usedTokenRef = firestoreDb
           .collection("used-token")
           .doc(queueToken);
-        transaction.set(usedTokenRef, { cellphoneNumber, timestamp });
+        transaction.set(usedTokenRef, { email, timestamp });
 
         return { queueIDWithPrefix, queueToken };
       }
@@ -208,7 +209,7 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
     }) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
-      cellphoneNumber: string;
+      email: string;
     };
 
 
@@ -231,12 +232,10 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       res.status(200).json({ position: 0, message: "You are now being served!" });
       return;
     }
-    /*     if (customerData.customerStatus !== "pending") {
-      res
-        .status(400)
-        .json({ message: "Your queue has already been completed" });
+    if (customerData.customerStatus === "complete") {
+      res.status(401).json({ position: 0, message: "You're transaction is complete" });
       return;
-    } */
+    }
     const customerQueueTimestamp = customerData.timestamp;
     const queueSnapshot = await firestoreDb
       .collection("queue")
@@ -245,7 +244,6 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       .where("timestamp", "<", customerQueueTimestamp)
       .get();
 
-    console.log(queueSnapshot.size);
     res.status(200).json({ position: queueSnapshot.size + 1 });
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
@@ -320,15 +318,15 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
     }) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
-      cellphoneNumber: string;
+      email: string;
     };
-    const { queueID, cellphoneNumber } = decodedToken;
+    const { queueID, email } = decodedToken;
     const queueRef = firestoreDb.collection("queue").doc(queueID);
     await queueRef.delete();
     const invalidTokenRef = firestoreDb
       .collection("invalid-token")
       .doc(req.token);
-    await invalidTokenRef.set({ cellphoneNumber, timestamp: Date.now() });
+    await invalidTokenRef.set({ email, timestamp: Date.now() });
     res.status(200).json({ message: "Successfully left the queue" });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
@@ -348,7 +346,7 @@ export const displayCurrentServing = async (req: QueueRequest, res: Response) =>
     const decodedToken = jwt.verify(req.token, SECRET_KEY, {algorithms: ["HS256"]}) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
-      cellphoneNumber: string;
+      email: string;
     };
 
     const {stationID} = decodedToken;
@@ -486,15 +484,29 @@ export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
 
     // Send notifications only to the new customers
     for (const queueIDP of customersToNotify) {
-      const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueIDP).get();
-      if (fcmDoc.exists) {
-        const fcmToken = fcmDoc.data()?.fcmToken;
-        if (fcmToken) {
-          await sendNotification(fcmToken, "You are in the top 4!", "Please be ready for your turn.");
+      const customerDoc = await firestoreDb.collection("queue").doc(queueIDP).get();
+      const customerData = customerDoc.data();
+
+      if (customerData) {
+        // Get FCM token for push notification
+        const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueIDP).get();
+        if (fcmDoc.exists) {
+          const fcmToken = fcmDoc.data()?.fcmToken;
+          if (fcmToken) {
+            await sendNotification(fcmToken, "You are in the top 4!", "Please be ready for your turn.");
+          }
+        }
+
+        // Send Email Notification
+        if (customerData.email) {
+          await sendEmail(
+            customerData.email,
+            "Queue Update: You're in the Top 4",
+            "Hello, you are now in the top 4 of the queue. Please be ready for your turn."
+          );
         }
       }
     }
-
     // Update notified customers in Firestore
     await firestoreDb.collection("notifications").doc(stationID).set({
       notifiedCustomers: newNotified,
@@ -509,6 +521,12 @@ export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
 
 export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) => {
   try {
+    const {counterNumber}: {counterNumber: string} = req.body;
+
+    if (!counterNumber) {
+      res.status(400).json({message: "Missing Counter Number"});
+      return;
+    }
     if (!req.token) {
       res.status(400).json({ message: "Missing token" });
       return;
@@ -541,8 +559,16 @@ export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) =
     if (fcmDoc.exists) {
       const fcmToken = fcmDoc.data()?.fcmToken;
       if (fcmToken) {
-        await sendNotification(fcmToken, "It's your turn!", "Please proceed to the counter.");
+        await sendNotification(fcmToken, "It's your turn!", `Please proceed to the counter ${counterNumber}.`);
       }
+    }
+
+    if (customerData.email) {
+      await sendEmail(
+        customerData.email,
+        "Queue Update: It's Your Turn!",
+        `Hello, it is now your turn. Please proceed to the counter ${counterNumber}.`
+      );
     }
 
     res.status(200).json({ message: "Currently serving notification sent" });
