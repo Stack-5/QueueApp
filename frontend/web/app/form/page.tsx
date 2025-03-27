@@ -30,14 +30,14 @@ import {
   formatWaitTime,
 } from "@/utils/computeEstimatedWaitingTime";
 import { enterQueue } from "@/utils/enterQueue";
-import { handlePhoneInput } from "@/utils/handlePhoneInput";
+import { isValidEmail } from "@/utils/isValidEmail";
 import { getToken, onMessage } from "firebase/messaging";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const FormPage = () => {
   const [purpose, setPurpose] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("+63");
+  const [email, setEmail] = useState("");
   const [fadeIn, setFadeIn] = useState(false);
   const router = useRouter();
   const [page, setPage] = useState(0);
@@ -74,7 +74,7 @@ const FormPage = () => {
     // Listen for foreground messages
     onMessage(messaging, (payload) => {
       console.log("Message received in foreground:", payload);
-      alert(payload.notification!.body);
+      alert(`${payload.notification?.title} ${payload.notification?.body}`);
     });
   }, [token]);
 
@@ -83,12 +83,6 @@ const FormPage = () => {
 
     return () => clearTimeout(timeoutId);
   }, []);
-
-  useEffect(() => {
-    if (phoneNumber[3] === "0") {
-      setPhoneNumber((prev) => prev.slice(0, 3) + prev.slice(4));
-    }
-  }, [phoneNumber]);
 
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center h-40">
@@ -128,7 +122,7 @@ const FormPage = () => {
               setIsEnterQueueLoading(true);
               const { queueToken, queueID } = await enterQueue(
                 purpose as CashierType,
-                phoneNumber,
+                email,
                 cashier.id,
                 token!
               );
@@ -179,14 +173,14 @@ const FormPage = () => {
         Thank you for scanning!
       </p>
       <p className="text-center text-gray-600 max-w-xs sm:max-w-md md:max-w-lg mt-2 font-bold text-xs sm:text-sm md:text-base">
-        Join a virtual queue and receive an SMS when it’s your turn. ⏳{" "}
+        Join a virtual queue and receive a notification or email when it’s your turn. ⏳{" "}
         <span className="text-red-500 font-bold">
           You have 10 minutes to submit the form
         </span>{" "}
         or scan the QR code again.
       </p>
       <p className="text-gray-600 mt-2 text-center text-xs sm:text-sm md:text-base">
-        Wait for an SMS notification shortly.
+        Wait for an Email notification shortly.
       </p>
 
       {/* Card Section */}
@@ -228,13 +222,13 @@ const FormPage = () => {
 
               {/* Phone Input */}
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="phone">Cellphone Number (required)</Label>
+                <Label htmlFor="email">Email Address(required)</Label>
                 <Input
-                  id="phone"
-                  placeholder="Enter your cellphone number"
+                  id="email"
+                  placeholder="Enter your Email Address"
                   className="border-[#FFBF00]"
-                  value={phoneNumber}
-                  onChange={(e) => handlePhoneInput(e, setPhoneNumber)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -260,7 +254,7 @@ const FormPage = () => {
             <Button
               className="w-40 bg-[#0077B6] text-[#FFBF00] font-bold"
               onClick={() => setPage(1)}
-              disabled={!purpose || phoneNumber.length !== 13}
+              disabled={!(isValidEmail(email) && purpose.trim())}
             >
               Proceed
             </Button>
@@ -276,7 +270,7 @@ const FormPage = () => {
       </Card>
 
       <p className="text-gray-600 font-extrabold mt-4 text-sm text-center">
-        Always check your notifications. Thank you!
+        Always check your email and notifications. Thank you!
       </p>
 
       {/* Alert Dialog */}
