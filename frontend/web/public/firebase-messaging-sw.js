@@ -19,6 +19,6 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(payload.notification.title, {
     body: payload.notification.body,
-    icon: "/logo.png", // Replace with neuqueue logo
+    icon: "/icon.png", // Replace with neuqueue logo
   });
 });
