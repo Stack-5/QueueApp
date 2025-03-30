@@ -1,10 +1,12 @@
 import { Response } from "express";
 import AuthRequest from "../types/AuthRequest";
 import { addCashierSchema } from "../zod-schemas/addCashier";
-import { realtimeDb } from "../config/firebaseConfig";
+import { auth, realtimeDb } from "../config/firebaseConfig";
 import CashierType from "../types/CashierType";
 import Station from "../types/Station";
 import Counter from "../types/Counter";
+import { recordLog } from "../utils/recordLog";
+import { ActionType } from "../types/activityLog";
 
 export const addStation = async (req: AuthRequest, res: Response) => {
   try {
@@ -27,6 +29,17 @@ export const addStation = async (req: AuthRequest, res: Response) => {
       currentNumber: 1,
     });
 
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(
+      req.user.uid,
+      ActionType.ADD_STATION,
+      `${displayName} Added station ${name}`
+    );
     res.status(201).json({ message: "Station added successfully." });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
@@ -94,6 +107,17 @@ export const deleteStation = async (req: AuthRequest, res: Response) => {
 
     // Apply all updates in one batch
     await realtimeDb.ref().update(updates);
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(
+      req.user.uid,
+      ActionType.DELETE_STATION,
+      `${displayName} deletes station ${stationData.name}`
+    );
     res
       .status(200)
       .json({
@@ -167,6 +191,18 @@ export const updateStation = async (req: AuthRequest, res: Response) => {
       activated: activated,
     });
 
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+
+    await recordLog(
+      req.user.uid,
+      ActionType.EDIT_STATION,
+      `${displayName} updates station ${stationData.name}`
+    );
     res
       .status(200)
       .json({ message: `${stationData.name} updated successfully` });

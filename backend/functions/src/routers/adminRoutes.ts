@@ -3,6 +3,7 @@ import { verifyAuthTokenAndDomain } from "../middlewares/verifyAuthTokenAndDomai
 import { verifyRole } from "../middlewares/verifyRole";
 import {
   assignUserRole,
+  getActivityLogs,
   getAvailableCashierEmployees,
   getEmployees,
   getPendingUsers,
@@ -18,5 +19,6 @@ router.get("/employees", getEmployees);
 router.post("/set-role", assignUserRole);
 router.get("/user-data/:uid", getUserData);
 router.get("/available-cashier-employees", getAvailableCashierEmployees);
+router.get("/get-activity", getActivityLogs);
 
 export default router;

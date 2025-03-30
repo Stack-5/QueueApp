@@ -1,6 +1,8 @@
 import { Response } from "express";
 import AuthRequest from "../types/AuthRequest";
-import { auth, realtimeDb } from "../config/firebaseConfig";
+import { auth, firestoreDb, realtimeDb } from "../config/firebaseConfig";
+import { recordLog } from "../utils/recordLog";
+import { ActionType } from "../types/activityLog";
 
 export const getPendingUsers = async (req: AuthRequest, res: Response) => {
   try {
@@ -137,6 +139,10 @@ export const assignUserRole = async (req: AuthRequest, res: Response) => {
       ...(role === "cashier" ? { station: existingData.station ?? null } : {}),
     });
 
+    const receiver = await auth.getUser(uid);
+    const displayName = receiver.displayName;
+
+    await recordLog(req.user.uid, ActionType.ASSIGN_ROLE, `Changed role of ${displayName} to ${role}`);
     res.status(200).json({ message: "Role assigned successfully" });
   } catch (error) {
     console.error(error);
@@ -176,6 +182,38 @@ export const getAvailableCashierEmployees = async (
     });
 
     res.status(200).json({ availableCashiers });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const getActivityLogs = async (req: AuthRequest, res: Response) => {
+  try {
+    const { startDate, endDate } = req.query; // Extract query params
+
+    if (!startDate || !endDate) {
+      res.status(400).json({ message: "Missing startDate or endDate" });
+      return;
+    }
+
+    // Convert to timestamps for Firestore
+    const startTimestamp = new Date(startDate as string).getTime();
+    const endTimestamp = new Date(endDate as string).getTime();
+
+    const activityRef = firestoreDb
+      .collection("activity-log")
+      .where("timestamp", ">=", startTimestamp)
+      .where("timestamp", "<=", endTimestamp)
+      .orderBy("timestamp");
+
+    const activitiesSnapshot = await activityRef.get();
+
+    const activityLogs = activitiesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json({ activities: activityLogs });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
