@@ -1,7 +1,9 @@
 import { Response } from "express";
 import { addCounterSchema } from "../zod-schemas/addCounter";
-import { realtimeDb } from "../config/firebaseConfig";
+import { auth, realtimeDb } from "../config/firebaseConfig";
 import AuthRequest from "../types/AuthRequest";
+import { recordLog } from "../utils/recordLog";
+import { ActionType } from "../types/activityLog";
 
 export const addCounter = async (req: AuthRequest, res: Response) => {
   try {
@@ -15,6 +17,19 @@ export const addCounter = async (req: AuthRequest, res: Response) => {
       employeeCashier: null,
       stationID: stationID,
     });
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    const stationRef = realtimeDb.ref(`station/${stationID}`);
+    const stationData = await stationRef.get();
+    await recordLog(
+      req.user.uid,
+      ActionType.ADD_COUNTER,
+      `${displayName} added counter: ${counterNumber} in ${stationData.val().name}`
+    );
     res.status(201).json({ message: "Counter added Successfully" });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
@@ -72,6 +87,19 @@ export const deleteCounter = async (req: AuthRequest, res: Response) => {
     // Apply all updates in one batch
     await realtimeDb.ref().update(updates);
 
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const stationRef = realtimeDb.ref(`station/${stationID}`);
+    const stationData = await stationRef.get();
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(
+      req.user.uid,
+      ActionType.DELETE_COUNTER,
+      `${displayName} deleted counter ${counterData.counterNumber} from station ${stationData.val().name}`
+    );
     res
       .status(200)
       .json({ message: `${snapshot.val().counterNumber} has been removed` });
@@ -133,6 +161,19 @@ export const updateCounter = async (req: AuthRequest, res: Response) => {
     }
 
     const updatedSnapshot = await counterRef.get();
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    const stationRef = realtimeDb.ref(`station/${stationID}`);
+    const stationData = await stationRef.get();
+    await recordLog(
+      req.user.uid,
+      ActionType.EDIT_COUNTER,
+      `${displayName} updates counter ${snapshot.val().counterNumber} from station ${stationData.val().name}`
+    );
     res.status(200).json({
       message: `${snapshot.val().counterNumber} has been updated to ${
         updatedSnapshot.val().counterNumber

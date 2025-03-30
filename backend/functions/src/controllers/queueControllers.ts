@@ -129,7 +129,6 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         return { queueIDWithPrefix, queueToken };
       }
     );
-
     res.status(201).json({
       queueNumber: queueTransaction.queueIDWithPrefix,
       queueToken: queueTransaction.queueToken,
