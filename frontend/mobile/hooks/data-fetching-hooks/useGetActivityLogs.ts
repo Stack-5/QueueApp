@@ -53,6 +53,8 @@ export const useGetActivityLogs = (userToken: string) => {
         if (acitivities.length > 0) {
           activityLogs = groupActivitiesByDate(acitivities);
           setGroupedActivities(activityLogs);
+        } else {
+          setGroupedActivities([]);
         }
       } catch (error) {
         if (isAxiosError(error)) {
