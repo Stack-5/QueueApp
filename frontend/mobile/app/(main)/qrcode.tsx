@@ -10,15 +10,21 @@ import { CUID_REQUEST_URL } from "@env";
 import { realtimeDb } from "@firebaseConfig";
 import { onValue, ref } from "firebase/database";
 import { SvgXml } from "react-native-svg";
+import { useUserContext } from "@contexts/UserContext";
 
 const QRCodeScreen = () => {
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const {userToken} = useUserContext();
 
 
   const fetchQRCode = async () => {
     try {
       const response = await axios.get(
-        `${CUID_REQUEST_URL}/queue/qrcode`
+        `${CUID_REQUEST_URL}/queue/qrcode`,{
+          headers:{
+            Authorization: `Bearer ${userToken}`
+          }
+        }
       );
       console.log(response.data.token);
       setQrCode(response.data.qrCode);

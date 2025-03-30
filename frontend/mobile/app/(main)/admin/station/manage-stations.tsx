@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import NeuQueueSearchBar from "@components/NeuQueueSearchBar";
 import {
   widthPercentageToDP as wp,
@@ -20,7 +20,14 @@ const ManageStationScreen = () => {
   const { setSelectedStation } = useSelectedStationContext();
 
   const { stations } = useGetStations();
+  const [searchQuery, setSearchQuery] = useState("");
 
+  const filteredStations =
+    searchQuery.length > 0
+      ? stations.filter((station) =>
+          station.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : stations;
   return (
     <View
       style={{
@@ -30,7 +37,14 @@ const ManageStationScreen = () => {
       }}
     >
       <View style={{ flexDirection: "row" }}>
-        <NeuQueueSearchBar extendViewStyle={{ flex: 1 }} />
+        <NeuQueueSearchBar
+          extendViewStyle={{ flex: 1 }}
+          textInputProps={{
+            value: searchQuery,
+            onChangeText: (text) => setSearchQuery(text),
+            placeholder: "Search Station Name",
+          }}
+        />
         <TouchableOpacity
           style={{ paddingHorizontal: wp(2), justifyContent: "center" }}
           activeOpacity={0.7}
@@ -39,14 +53,18 @@ const ManageStationScreen = () => {
           <AntDesign name="pluscircle" size={wp(10)} />
         </TouchableOpacity>
       </View>
-      {stations.length === 0 ? (
-        <View style={{flex:1, justifyContent:'center', alignItems:"center"}}>
-          <Text style={{fontFamily:"lexendsemibold", fontSize:wp(6)}}>No Stations Found</Text>
+      {filteredStations.length === 0 ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ fontFamily: "lexendsemibold", fontSize: wp(6) }}>
+            No Stations Found
+          </Text>
         </View>
       ) : (
         <>
           <FlatList
-            data={stations}
+            data={filteredStations}
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={{

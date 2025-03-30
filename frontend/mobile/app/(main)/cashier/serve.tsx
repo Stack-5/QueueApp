@@ -13,9 +13,11 @@ import { realtimeDb } from "@firebaseConfig";
 import { completeTransaction } from "@methods/cashier/completeTransaction";
 import { serveCustomer } from "@methods/cashier/serveCustomer";
 import { CUID_REQUEST_URL } from "@env";
+import { notifyCustomer } from "@methods/cashier/notifyCustomer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const QueueScreen = () => {
-  const { userInfo, userToken } = useUserContext();
+  const { userToken } = useUserContext();
   const { cashierInfo, isGetCashierEmployeeInformationLoading } =
     useGetCashierInformation(userToken);
   const [currentServingQueueID, setCurrentServingQueueID] = useState<
@@ -26,6 +28,22 @@ const QueueScreen = () => {
     useState(false);
   const [isGettingNextCustomerLoading, setIsGettingNextCustomerLoading] =
     useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [isNotifyLoading, setIsNotifyLoading] = useState(false);
+  useEffect(() => {
+    const checkLastNotifyTime = async () => {
+      const lastNotifyTime = await AsyncStorage.getItem("lastNotifyTime");
+      if (lastNotifyTime) {
+        const elapsedTime = Date.now() - parseInt(lastNotifyTime, 10);
+        if (elapsedTime < 60000) {
+          setIsDisabled(true);
+          setTimeout(() => setIsDisabled(false), 60000 - elapsedTime);
+        }
+      }
+    };
+    checkLastNotifyTime();
+  }, []);
+
   useEffect(() => {
     if (!cashierInfo.counterID || !userToken) return;
 
@@ -112,7 +130,32 @@ const QueueScreen = () => {
           >
             <NeuQueueButtonYellow
               title="Notify Customer"
-              buttonFn={() => {}}
+              buttonFn={async () => {
+                try {
+                  setIsNotifyLoading(true);
+                  setIsDisabled(true);
+                  await AsyncStorage.setItem(
+                    "lastNotifyTime",
+                    Date.now().toString()
+                  );
+
+                  await notifyCustomer(
+                    cashierInfo.counterNumber,
+                    currentServingQueueID,
+                    userToken
+                  );
+                  alert("Customer notified, Please wait 1 minute before notifying again");
+
+                  setTimeout(() => setIsDisabled(false), 60000); // Re-enable after 1 min
+                } catch (error) {
+                  alert((error as Error).message);
+                  console.log(error);
+                } finally {
+                  setIsNotifyLoading(false);
+                }
+              }}
+              disable={isDisabled}
+              loading={isNotifyLoading}
             />
             <NeuQueueButtonYellow
               title="Complete Transaction"
