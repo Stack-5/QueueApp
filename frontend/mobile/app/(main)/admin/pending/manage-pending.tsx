@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useCallback} from "react";
+import { useCallback, useState } from "react";
 import NeuQueueSearchBar from "@components/NeuQueueSearchBar";
 import {
   heightPercentageToDP as hp,
@@ -20,8 +20,17 @@ import { router } from "expo-router";
 import { useGetPendingUsers } from "@hooks/data-fetching-hooks/useGetPendingUsers";
 
 const ManageUserScreen = () => {
+  const { pendingUsers, isPendingUsersFetching } = useGetPendingUsers();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const {pendingUsers, isPendingUsersFetching} = useGetPendingUsers();
+  const filteredPendingUsers =
+    searchQuery.length > 0
+      ? pendingUsers.filter((pendingUser) =>
+          pendingUser.email
+            .toLocaleLowerCase()
+            .includes(searchQuery.toLocaleLowerCase())
+        )
+      : pendingUsers;
   const renderUserList = useCallback(
     ({ item }: { item: User }) => (
       <TouchableOpacity
@@ -68,14 +77,14 @@ const ManageUserScreen = () => {
         backgroundColor: "#F9FAFB",
       }}
     >
-      <NeuQueueSearchBar />
+      <NeuQueueSearchBar textInputProps={{value: searchQuery, onChangeText:(text) => setSearchQuery(text), placeholder: "Search By Email"}}/>
       {isPendingUsersFetching ? (
         <View style={styles.centeredView}>
           <ActivityIndicator size={wp(12)} color="#0077B6" />
         </View>
       ) : (
         <>
-          {!pendingUsers.length ? (
+          {!filteredPendingUsers.length ? (
             <View style={styles.centeredView}>
               <Text style={[styles.label, { textAlign: "center" }]}>
                 {"All users have been reviewed. \nNo pending approvals."}
@@ -94,7 +103,7 @@ const ManageUserScreen = () => {
                 <Text style={styles.label}>Created at</Text>
               </View>
               <FlatList
-                data={pendingUsers}
+                data={filteredPendingUsers}
                 renderItem={renderUserList}
                 showsVerticalScrollIndicator={false}
                 initialNumToRender={10}
