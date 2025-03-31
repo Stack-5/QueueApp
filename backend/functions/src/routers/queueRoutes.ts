@@ -6,7 +6,6 @@ import {
   displayCurrentServing,
   generateQrCode,
   getAvailableStation,
-  // getLatestQueueIDs,
   getQueuePosition,
   getStationInfo,
   leaveQueue,
@@ -15,16 +14,16 @@ import {
   storeFCMToken,
   verifyCustomerToken,
 } from "../controllers/queueControllers";
+import { verifyAuthTokenAndDomain } from "../middlewares/verifyAuthTokenAndDomain";
 
 // eslint-disable-next-line new-cap
 const router: Router = Router();
 
-router.get("/qrcode", generateQrCode);
+router.get("/qrcode", verifyAuthTokenAndDomain, generateQrCode);
 router.post("/add", verifyValidQueueJWT, verifyUsedToken, addQueue);
 router.post("/available-stations", verifyValidQueueJWT, verifyUsedToken, getAvailableStation);
 router.get("/queue-position", verifyValidQueueJWT, getQueuePosition);
 router.get("/notify-on-initial-mount", verifyValidQueueJWT, notifyOnSuccessScan);
-// router.get("/get-latest", verifyValidQueueJWT, getLatestQueueIDs);
 router.get("/verify-on-mount", verifyValidQueueJWT, verifyCustomerToken);
 router.post("/leave", verifyValidQueueJWT, leaveQueue);
 router.get("/display-serving", verifyValidQueueJWT, displayCurrentServing);

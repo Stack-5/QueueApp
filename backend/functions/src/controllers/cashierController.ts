@@ -1,8 +1,12 @@
 import { Response } from "express";
 import AuthRequest from "../types/AuthRequest";
-import { firestoreDb, realtimeDb } from "../config/firebaseConfig";
+import { auth, firestoreDb, realtimeDb } from "../config/firebaseConfig";
 import CashierType from "../types/CashierType";
 import Counter from "../types/Counter";
+import { recordLog } from "../utils/recordLog";
+import { ActionType } from "../types/activityLog";
+import { sendEmail } from "../utils/sendEmail";
+import { sendNotification } from "../utils/sendNotification";
 
 export const serveCustomer = async (req: AuthRequest, res: Response) => {
   try {
@@ -70,6 +74,13 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
       serving: customerDocID, // ✅ Use document ID as queueID
     });
 
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(req.user.uid, ActionType.SERVE_CUSTOMER, `${displayName} serves customer ${customerDocID}`);
     res.status(200).json({
       message: "Customer assigned to cashier",
       customer: customerDocID,
@@ -109,8 +120,21 @@ export const completeTransaction = async (req: AuthRequest, res: Response) => {
     const currentCounterServing = realtimeDb.ref(
       `counters/${counterID}/serving`
     );
-    await currentCounterServing.remove();
+    const currentCustomerData = await currentCounterServing.get();
+    const currentCustomer = currentCustomerData.val();
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(
+      req.user.uid,
+      ActionType.COMPLETE_TRANSACTION,
+      `${displayName} completes customer ${currentCustomer}`
+    );
 
+    await currentCounterServing.remove();
     res.status(200).json({ message: "Customer marked as complete" });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
@@ -204,6 +228,50 @@ export const getCurrentServing = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ currentServing: counterData.serving });
   } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const notifyCustomer = async (req: AuthRequest, res: Response) => {
+  try {
+    const {counterNumber, queueID}: {counterNumber: string, queueID: string} = req.body;
+
+    if (!counterNumber || !queueID) {
+      res.status(400).json({message: "Missing Counter Number or QueueID"});
+      return;
+    }
+    const queueDoc = await firestoreDb.collection("queue").doc(queueID).get();
+    if (!queueDoc.exists) {
+      res.status(404).json({ message: "Queue not found" });
+      return;
+    }
+
+    const customerData = queueDoc.data();
+    if (customerData?.customerStatus !== "ongoing") {
+      res.status(400).json({ message: "Customer is not serving yet" });
+      return;
+    }
+
+    // Get FCM token for the customer
+    const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueID).get();
+    if (fcmDoc.exists) {
+      const fcmToken = fcmDoc.data()?.fcmToken;
+      if (fcmToken) {
+        await sendNotification(fcmToken, "It's your turn!", `Please proceed to the counter ${counterNumber}.`);
+      }
+    }
+
+    if (customerData.email) {
+      await sendEmail(
+        customerData.email,
+        "Queue Update: It's Your Turn!",
+        `Hello, it is now your turn. Please proceed to the counter ${counterNumber}.`
+      );
+    }
+
+    res.status(200).json({ message: "Currently serving notification sent" });
+  } catch (error) {
+    console.error("Error notifying serving customer:", error);
     res.status(500).json({ message: (error as Error).message });
   }
 };
