@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import jwt, { TokenExpiredError } from "jsonwebtoken";
+import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
 import QRcode from "qrcode";
 import { firestoreDb, realtimeDb } from "../config/firebaseConfig";
 import { addToQueueSchema } from "../zod-schemas/addToQueue";
@@ -17,15 +17,12 @@ import { ZodError } from "zod";
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
 
-// TODO: verify a jwt before generating QRCODE
 export const generateQrCode = async (req: Request, res: Response) => {
   try {
     if (!SECRET_KEY || !NEUQUEUE_ROOT_URL) {
       throw new Error("Missing Secret in environmental variables!");
     }
-    const payload = {
-      id: uuidv4(),
-    };
+    const payload = { id: uuidv4(), type: "permission" };
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "10m" });
     const url = `${NEUQUEUE_ROOT_URL}?token=${token}`;
     const qrCodeDataUrl = await QRcode.toString(url, { type: "svg" });
@@ -33,12 +30,45 @@ export const generateQrCode = async (req: Request, res: Response) => {
     res.status(201).json({ qrCode: qrCodeDataUrl, token: token });
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      res.status(401).json({message: "Token has expired, please sign in again"});
+      res.status(401).json({ message: "Token has expired, please sign in again" });
     } else {
       res.status(500).json({ message: (error as Error).message });
     }
   }
 };
+
+export const getValidJwtForFormAccess = async(req: QueueRequest, res: Response ) => {
+  try {
+    if (!req.token) {
+      res.status(401).json({ message: "The token is invalid or missing" });
+      return;
+    }
+    if (!SECRET_KEY || !NEUQUEUE_ROOT_URL) {
+      throw new Error("Missing Secret in environmental variables!");
+    }
+
+    const decodedToken = jwt.verify(req.token, SECRET_KEY) as JwtPayload;
+    console.log(decodedToken.type);
+    if (decodedToken.type !== "permission") {
+      res.status(403).json({ message: "Invalid token type" });
+      return;
+    }
+    const payload = {
+      id: uuidv4(),
+      access: true,
+      type: "queue-form"
+    }
+
+    const token = jwt.sign(payload, SECRET_KEY, {expiresIn:"10m"});
+    res.status(201).json({ token: token });
+  } catch (error) {
+    if (error instanceof TokenExpiredError) {
+      res.status(401).json({ message: "Token has expired, please sign in again"});
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
+  }
+}
 
 export const verifyCustomerToken = async (req: QueueRequest, res: Response) => {
   try {
@@ -134,7 +164,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         }
 
         const queueToken = jwt.sign(
-          { queueID: queueIDWithPrefix, stationID, email },
+          { queueID: queueIDWithPrefix, stationID, email, type: "queue-status",},
           SECRET_KEY,
           { expiresIn: "10h" }
         );
