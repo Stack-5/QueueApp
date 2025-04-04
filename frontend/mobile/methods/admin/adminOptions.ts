@@ -27,6 +27,11 @@ const adminOptions: OptionAdminType[] = [
     iconName: "account-alert",
     label: "Review pending accounts",
   },
+  {
+    key: 5,
+    iconName: "account-cancel",
+    label: "Blacklist",
+  },
 ];
 
 const optionMethods = (key: number) => {
@@ -46,6 +51,10 @@ const optionMethods = (key: number) => {
     case 4:
       return () => {
         router.push("/admin/pending/manage-pending");
+      };
+    case 5:
+      return () => {
+        router.push("/admin/blacklist/blocked-email-list");
       };
     default:
       return () => {};

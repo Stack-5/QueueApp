@@ -7,6 +7,7 @@ import Station from "../types/Station";
 import Counter from "../types/Counter";
 import { recordLog } from "../utils/recordLog";
 import { ActionType } from "../types/activityLog";
+import { ZodError } from "zod";
 
 export const addStation = async (req: AuthRequest, res: Response) => {
   try {
@@ -60,7 +61,11 @@ export const getStations = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ cashierLocationList: cashierLocationList });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors.map((err) => err.message).join(", ") });
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };
 
@@ -207,6 +212,10 @@ export const updateStation = async (req: AuthRequest, res: Response) => {
       .status(200)
       .json({ message: `${stationData.name} updated successfully` });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors.map((err) => err.message).join(", ") });
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };

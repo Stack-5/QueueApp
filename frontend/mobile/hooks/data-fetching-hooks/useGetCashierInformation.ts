@@ -42,7 +42,9 @@ export const useGetCashierInformation = (userToken: string) => {
       } catch (error) {
         if (isAxiosError(error)) {
           alert(error.response?.data.message);
+          return;
         }
+        alert((error as Error).message);
       } finally {
         setIsGetCashierInformationLoading(false);
       }

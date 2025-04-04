@@ -7,5 +7,5 @@ export const addToQueueSchema = object({
   email: string().email("Invalid email format"),
   timestamp: number().default(() => Date.now()),
   customerStatus: zEnum(["pending", "ongoing", "complete"]).default("pending"),
-  stationID: string(),
+  stationID: string().min(1, "Station ID cannot be empty"),
 });

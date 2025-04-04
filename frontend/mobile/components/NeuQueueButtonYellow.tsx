@@ -6,7 +6,8 @@ const NeuQueueButtonYellow = ({
   title,
   buttonFn,
   loading,
-  disable
+  disable,
+  extendStyle
 }: CommonButtonProps) => {
   return (
     <TouchableOpacity
@@ -14,7 +15,10 @@ const NeuQueueButtonYellow = ({
         backgroundColor: "#FFBF00",
         padding: wp(4),
         borderRadius: wp(3),
+        opacity: disable? 0.5 : 1,
+        ...(extendStyle)
       }}
+      
       activeOpacity={0.8}
       onPress={buttonFn}
       disabled={loading || disable}

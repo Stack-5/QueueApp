@@ -27,7 +27,7 @@ export const useGoogleSignIn = (
     } catch (error) {
       if (isAxiosError(error) && error.response) {
         if (error.response.status === 403) {
-          auth.signOut();
+          await auth.signOut();
         }
         alert(`${error.response.status}, ${error.response.data.message}`);
       } else if ((error as FirebaseError).code === "auth/user-disabled") {

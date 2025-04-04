@@ -50,7 +50,7 @@ const FormPage = () => {
     useAlertMessage(error);
 
   useEffect(() => {
-    if(!token) return;
+    if (!token) return;
     if (!messaging) return;
     const requestPermission = async () => {
       if (!messaging) return;
@@ -64,8 +64,8 @@ const FormPage = () => {
           localStorage.setItem("fcmtoken", fcmToken);
         }
       } catch (error) {
-          setAlertMessage((error as Error).message);
-          setIsAlertOpen(true);
+        setAlertMessage((error as Error).message);
+        setIsAlertOpen(true);
       }
     };
 
@@ -132,17 +132,11 @@ const FormPage = () => {
               router.replace("/queue-status");
             } catch (error) {
               const submitErrorMessage = (error as Error).message;
-              if (submitErrorMessage === "unauthorized") {
-                router.replace("/error/unauthorized"); // Redirect to custom 401 page
-                return;
-              }
-
-              if (submitErrorMessage === "server-error") {
-                router.replace("/error/internal-server-error"); // Redirect to custom 500 page
-                return;
-              }
               setAlertMessage(submitErrorMessage);
               setIsAlertOpen(true);
+              if ((error as { status?: number }).status === 401) {
+                router.replace("/error/unauthorized");
+              } else router.replace("/error/internal-server-error");
             } finally {
               setIsEnterQueueLoading(false);
             }
@@ -173,7 +167,8 @@ const FormPage = () => {
         Thank you for scanning!
       </p>
       <p className="text-center text-gray-600 max-w-xs sm:max-w-md md:max-w-lg mt-2 font-bold text-xs sm:text-sm md:text-base">
-        Join a virtual queue and receive a notification or email when it’s your turn. ⏳{" "}
+        Join a virtual queue and receive a notification or email when it’s your
+        turn. ⏳{" "}
         <span className="text-red-500 font-bold">
           You have 10 minutes to submit the form
         </span>{" "}

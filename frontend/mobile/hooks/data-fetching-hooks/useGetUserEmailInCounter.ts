@@ -24,7 +24,10 @@ export const useGetUserEmailInCounter = (counters: Counter[] | undefined) => {
       console.log("response", response.data);
       return response.data.userData.email || "";
     } catch (error) {
-      if(isAxiosError(error)) console.log(error.response?.data);
+      if (isAxiosError(error)) {
+        alert(error.response?.data.message);
+        return;
+      }
       alert((error as Error).message);
     } finally {
       setIsGettingEmailLoading(false);

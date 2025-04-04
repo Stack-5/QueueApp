@@ -43,7 +43,11 @@ const MainMenuScreen = () => {
 
         {/* Settings - Route to respective settings page */}
         <NeuMainMenuButton
-          title="Settings"
+          title={
+            ["admin", "superAdmin"].includes(userInfo?.role!)
+              ? "Admin Panel"
+              : "Settings"
+          }
           buttonFn={() => {
             const roleSettings = {
               admin: "admin/settings",
@@ -59,11 +63,4 @@ const MainMenuScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  splashText: {
-    fontFamily: "lexendbold",
-    fontSize: 40,
-  },
-});
 export default MainMenuScreen;

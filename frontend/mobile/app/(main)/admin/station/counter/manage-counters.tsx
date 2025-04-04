@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -18,7 +19,7 @@ import { useSelectedCounterContext } from "@contexts/SelectedCounterContext";
 import { useState } from "react";
 
 const ManageCounterScreen = () => {
-  const { counters } = useGetCounters();
+  const { counters, isGettingCountersLoading } = useGetCounters();
   const { emails, isGettingEmailLoading } = useGetUserEmailInCounter(counters);
   const { setSelectedCounter } = useSelectedCounterContext();
 
@@ -55,41 +56,57 @@ const ManageCounterScreen = () => {
           <AntDesign name="pluscircle" size={wp(10)} />
         </TouchableOpacity>
       </View>
-      {filteredCounters && filteredCounters.length > 0 ? (
-        <FlatList
-          data={filteredCounters}
-          renderItem={({ item }) => (
-            <TouchableOpacity
+      {isGettingCountersLoading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size={wp(10)} />
+        </View>
+      ) : (
+        <>
+          {filteredCounters && filteredCounters.length > 0 ? (
+            <FlatList
+              data={filteredCounters}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    padding: wp(2),
+                    backgroundColor: "#F1F1F1",
+                    borderRadius: wp(3),
+                    marginVertical: hp(1),
+                  }}
+                  onPress={() => {
+                    setSelectedCounter(item);
+                    router.push("admin/station/counter/edit-counter");
+                  }}
+                >
+                  <Text
+                    style={{ fontFamily: "lexendmedium", fontSize: wp(5.5) }}
+                  >
+                    Counter {item.counterNumber}
+                  </Text>
+                  <Text style={styles.stationDescription} numberOfLines={1}>
+                    {isGettingEmailLoading
+                      ? "Loading..."
+                      : emails[item.uid!] ?? "No Cashier Assigned"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <View
               style={{
-                padding: wp(2),
-                backgroundColor: "#F1F1F1",
-                borderRadius: wp(3),
-                marginVertical: hp(1),
-              }}
-              onPress={() => {
-                setSelectedCounter(item);
-                router.push("admin/station/counter/edit-counter");
+                justifyContent: "center",
+                alignItems: "center",
+                flex: 1,
               }}
             >
-              <Text style={{ fontFamily: "lexendmedium", fontSize: wp(5.5) }}>
-                Counter {item.counterNumber}
+              <Text style={{ fontFamily: "lexendsemibold", fontSize: wp(6) }}>
+                No Counters Found
               </Text>
-              <Text style={styles.stationDescription} numberOfLines={1}>
-                {isGettingEmailLoading
-                  ? "Loading..."
-                  : emails[item.uid!] ?? "No Cashier Assigned"}
-              </Text>
-            </TouchableOpacity>
+            </View>
           )}
-        />
-      ) : (
-        <View
-          style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
-        >
-          <Text style={{ fontFamily: "lexendsemibold", fontSize: wp(6) }}>
-            No Counters Found
-          </Text>
-        </View>
+        </>
       )}
     </View>
   );

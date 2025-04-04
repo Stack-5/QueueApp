@@ -2,7 +2,7 @@ import { useUserContext } from "@contexts/UserContext";
 import { CUID_REQUEST_URL } from "@env";
 import { realtimeDb } from "@firebaseConfig";
 import User from "@type/user";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { onValue, ref } from "firebase/database";
 import { useEffect, useState } from "react"
 
@@ -42,6 +42,10 @@ export const useGetAvailableCashierEmployees =  () => {
         })) 
         setAvailableEmployees(availableEmployeesData);
       } catch (error) {
+        if (isAxiosError(error)) {
+          alert(error.response?.data.message);
+          return;
+        }
         alert((error as Error).message);
       }
       finally{

@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
@@ -19,7 +20,7 @@ import { useGetStations } from "@hooks/data-fetching-hooks/useGetStations";
 const ManageStationScreen = () => {
   const { setSelectedStation } = useSelectedStationContext();
 
-  const { stations } = useGetStations();
+  const { stations, isGettingStationLoading } = useGetStations();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredStations =
@@ -53,49 +54,63 @@ const ManageStationScreen = () => {
           <AntDesign name="pluscircle" size={wp(10)} />
         </TouchableOpacity>
       </View>
-      {filteredStations.length === 0 ? (
+      {isGettingStationLoading ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Text style={{ fontFamily: "lexendsemibold", fontSize: wp(6) }}>
-            No Stations Found
-          </Text>
+          <ActivityIndicator size={wp(10)} />
         </View>
       ) : (
         <>
-          <FlatList
-            data={filteredStations}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={{
-                  padding: wp(2),
-                  backgroundColor: "#F1F1F1",
-                  borderRadius: wp(3),
-                  marginVertical: hp(1),
-                }}
-                onPress={() => {
-                  setSelectedStation(item);
-                  router.push("admin/station/edit-station");
-                }}
-              >
-                <Text style={{ fontFamily: "lexendmedium", fontSize: wp(5.5) }}>
-                  {item.name}
-                </Text>
-                <Text style={styles.stationDescription} numberOfLines={1}>
-                  {item.description}
-                </Text>
-                <Text style={styles.stationDescription}>{item.type}</Text>
-                <Text
-                  style={[
-                    styles.stationDescription,
-                    { color: item.activated ? "green" : "red" },
-                  ]}
+          {filteredStations.length > 0 ? (
+            <FlatList
+              data={filteredStations}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    padding: wp(2),
+                    backgroundColor: "#F1F1F1",
+                    borderRadius: wp(3),
+                    marginVertical: hp(1),
+                  }}
+                  onPress={() => {
+                    setSelectedStation(item);
+                    router.push("admin/station/edit-station");
+                  }}
                 >
-                  {item.activated ? "Open" : "Closed"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
+                  <Text
+                    style={{ fontFamily: "lexendmedium", fontSize: wp(5.5) }}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text style={styles.stationDescription} numberOfLines={1}>
+                    {item.description}
+                  </Text>
+                  <Text style={styles.stationDescription}>{item.type}</Text>
+                  <Text
+                    style={[
+                      styles.stationDescription,
+                      { color: item.activated ? "green" : "red" },
+                    ]}
+                  >
+                    {item.activated ? "Open" : "Closed"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontFamily: "lexendsemibold", fontSize: wp(6) }}>
+                No Stations Found
+              </Text>
+            </View>
+          )}
         </>
       )}
     </View>

@@ -41,4 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
-public/firebase-messaging-sw.js
+public/firebase-config.js

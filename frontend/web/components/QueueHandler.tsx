@@ -1,6 +1,6 @@
 "use client";
 
-import { newToken, pendingToken } from "@/types/tokenType";
+import { queueToken } from "@/types/tokenType";
 import axios, { isAxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -32,27 +32,26 @@ const QueueHandler = () => {
         return;
       }
 
+      console.log("tokenContainer", tokenContainer);
+
       try {
+        const headers = { Authorization: `Bearer ${tokenContainer}` };
         // Validate with backend
         await axios.get(
           `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/notify-on-initial-mount`,
           {
-            headers: {
-              Authorization: `Bearer ${tokenContainer}`,
-            },
+            headers
           }
         );
         await axios.get(
           `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/verify-on-mount`,
           {
-            headers: {
-              Authorization: `Bearer ${tokenContainer}`,
-            },
+            headers
           }
         );
 
         // Decode token and determine where to redirect
-        const decodedToken = jwtDecode<newToken | pendingToken>(tokenContainer);
+        const decodedToken = jwtDecode<queueToken>(tokenContainer);
         console.log(
           "[processQueueInformation] Valid token found:",
           decodedToken
@@ -60,17 +59,42 @@ const QueueHandler = () => {
 
         // Redirect based on token type
         setFadeOut(true);
-        if ("id" in decodedToken) {
-          console.log("[processQueueInformation] Redirecting to /form.");
-          router.replace("/form");
-        } else if ("queueID" in decodedToken && "stationID" in decodedToken) {
-          console.log(
-            "[processQueueInformation] Redirecting to /queue-status."
-          );
-          router.replace("/queue-status");
-        } else {
-          console.warn("[processQueueInformation] Unexpected token structure.");
-          router.replace("/error/unauthorized");
+        switch (decodedToken.type) {
+          case "queue-form":
+            console.log("[QueueInit] Redirecting to /form.");
+            router.replace("/form");
+            break;
+          case "queue-status":
+            console.log("[QueueInit] Redirecting to /queue-status.");
+            router.replace("/queue-status");
+            break;
+            case "permission":
+              try {
+                const formTokenRes = await axios.get(
+                  `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/get-valid-token-for-queue-access`,
+                  { headers }
+                );
+    
+                const newToken = formTokenRes.data.token;
+    
+                if (formTokenRes.status === 201 && newToken) {
+                  localStorage.setItem("token", newToken);
+                  console.log("[QueueInit] Permission upgraded to queue-form. Redirecting to /form.");
+                  router.replace("/form");
+                } else {
+                  console.warn("[QueueInit] Failed to upgrade permission token.");
+                  router.replace("/error/unauthorized");
+                }
+              } catch (formTokenError) {
+                console.error("[QueueInit] Error fetching form access token:", formTokenError);
+                router.replace("/error/unauthorized");
+              }
+              break;
+          default:
+            console.warn(
+              "[processQueueInformation] Unknown token type. Redirecting to 401."
+            );
+            router.replace("/error/unauthorized");
         }
       } catch (error) {
         if (isAxiosError(error)) {
@@ -78,7 +102,7 @@ const QueueHandler = () => {
             "[processQueueInformation] Axios error:",
             error.response?.data.message
           );
-          if (error.response?.status === 401) {
+          if (error.response?.status === 401 || error.response?.status === 403) {
             localStorage.removeItem("token");
             router.replace("/error/unauthorized");
           } else {

@@ -1,4 +1,5 @@
-import { newToken, pendingToken } from "@/types/tokenType";
+
+import { queueToken } from "@/types/tokenType";
 import axios, { isAxiosError } from "axios";
 import { jwtDecode} from "jwt-decode";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -12,7 +13,7 @@ export const useVerifyValidToken = (
 ) => {
   const pathname = usePathname();
   const [token, setToken] = useState<string | null>(null);
-  const [decodedToken, setDecodedToken] = useState<pendingToken | newToken | null>(null); 
+  const [decodedToken, setDecodedToken] = useState<queueToken | null>(null); 
   useEffect(() => {
     const tokenInLocalStorage = localStorage.getItem("token");
     console.log("in local storage", tokenInLocalStorage)
@@ -32,16 +33,16 @@ export const useVerifyValidToken = (
           }
         );
 
-        const decodedToken = jwtDecode<newToken | pendingToken>(tokenInLocalStorage);
+        const decodedToken = jwtDecode<queueToken>(tokenInLocalStorage);
         setDecodedToken(decodedToken);
         // ✅ Redirect based on token type
-        if ("id" in decodedToken && pathname !== "/form") {
-          console.log("[useVerifyValidToken] Detected newToken, redirecting to form.");
+        if (decodedToken.type === "queue-form" && pathname !== "/form") {
+          console.log("[useVerifyValidToken] Detected queue-form token, redirecting to form.");
           router.replace("/form");
-        } else if ("queueID" in decodedToken && "stationID" in decodedToken && pathname !== "/queue-status") {
-          console.log("[useVerifyValidToken] Detected pendingToken, redirecting to queue-status.");
+        } else if (decodedToken.type === "queue-status" && pathname !== "/queue-status") {
+          console.log("[useVerifyValidToken] Detected queue-status token, redirecting to queue-status.");
           router.replace("/queue-status");
-        } else if (!("id" in decodedToken) && !("queueID" in decodedToken)) {
+        } else if (!["queue-form", "queue-status"].includes(decodedToken.type) && !("queueID" in decodedToken)) {
           console.warn("[useVerifyValidToken] Unexpected token structure.");
           router.replace("/error/unauthorized");
         }

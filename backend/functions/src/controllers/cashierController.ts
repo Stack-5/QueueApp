@@ -37,7 +37,7 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
     }
 
     const customerRef = firestoreDb.collection("queue");
-    const { customerDocID } = await firestoreDb.runTransaction(
+    const { customerDocID, customerEmail} = await firestoreDb.runTransaction(
       async (transaction) => {
         const queueSnapshot = await transaction.get(
           customerRef
@@ -53,10 +53,11 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
 
         const customerDoc = queueSnapshot.docs[0];
         const customerDocID = customerDoc.id;
+        const customerEmail = customerDoc.data().email;
 
         transaction.update(customerDoc.ref, { customerStatus: "ongoing" });
 
-        return { customerDocID };
+        return { customerDocID, customerEmail };
       }
     );
 
@@ -80,7 +81,11 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
     }
     const receiver = await auth.getUser(req.user.uid);
     const displayName = receiver.displayName;
-    await recordLog(req.user.uid, ActionType.SERVE_CUSTOMER, `${displayName} serves customer ${customerDocID}`);
+    await recordLog(
+      req.user.uid,
+      ActionType.SERVE_CUSTOMER,
+      `${displayName} serves customer ${customerDocID} (${customerEmail})`
+    );
     res.status(200).json({
       message: "Customer assigned to cashier",
       customer: customerDocID,
@@ -275,3 +280,56 @@ export const notifyCustomer = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: (error as Error).message });
   }
 };
+
+export const skipCustomer = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      queueID,
+      stationID,
+      counterID,
+    }: { queueID: string; stationID: string; counterID: string } = req.body;
+
+    const queueRef = firestoreDb.collection("queue").doc(queueID);
+    const queueSnapshot = await queueRef.get();
+
+    if (!queueSnapshot.exists) {
+      res.status(404).json({ message: "Queue entry not found" });
+      return;
+    }
+
+    await queueRef.update({
+      customerStatus: "unsuccessful",
+    });
+
+    const currentServingRef = realtimeDb.ref(
+      `current-serving/${stationID}/${counterID}`
+    );
+    await currentServingRef.remove();
+
+    const currentCounterServing = realtimeDb.ref(
+      `counters/${counterID}/serving`
+    );
+    await currentCounterServing.remove();
+    if (!req.user) {
+      res.status(401).json({message: "User ID is missing!"});
+      return;
+    }
+
+    const customerRef = firestoreDb.collection("queue").doc(queueID);
+    const customer = await customerRef.get();
+    const customerData = customer.data();
+    if (!customerData || !customerData.email) {
+      res.status(400).json({ message: "Customer data is missing email" });
+      return;
+    }
+
+    const { email } = customerData;
+    const receiver = await auth.getUser(req.user.uid);
+    const displayName = receiver.displayName;
+    await recordLog(req.user.uid, ActionType.SKIP_CUSTOMER, `${displayName} skips customer ${queueID} (${email})`);
+    res.status(200).json({ message: "Customer marked as unsuccessful" });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+

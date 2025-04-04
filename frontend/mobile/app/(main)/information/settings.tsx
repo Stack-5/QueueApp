@@ -1,24 +1,19 @@
-import { Text, View, Switch } from "react-native";
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { Text, View } from "react-native";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import NeuQueueSettingsButton from "@components/NeuQueueSettingsButton";
 import NeuQueueButtonYellow from "@components/NeuQueueButtonYellow";
 import { auth } from "@firebaseConfig";
 import { useSignOutAuthStateListener } from "@hooks/useSignOutAuthStateListener";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUserContext } from "@contexts/UserContext";
+import { useState } from "react";
 
-const CashierSettings = () => {
+const InformationSettings = () => {
   useSignOutAuthStateListener();
-  const router = useRouter();
-  const [isCashier, setIsCashier] = useState(false);
-  const toggleSwitch = () => setIsCashier((prev) => !prev);
   const { userInfo } = useUserContext();
+  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   return (
     <View
       style={{ flex: 1, backgroundColor: "#F9FAFB", paddingHorizontal: wp(1) }}
@@ -56,13 +51,22 @@ const CashierSettings = () => {
         <NeuQueueButtonYellow
           title="Sign out"
           buttonFn={async () => {
-            auth.signOut();
-            await AsyncStorage.removeItem("isverified");
+            try {
+              setIsSignOutLoading(true);
+              await auth.signOut();
+              await AsyncStorage.removeItem("isverified");
+            } catch (error) {
+              alert((error as Error).message);
+            } finally {
+              setIsSignOutLoading(false)
+            }
+           
           }}
+          loading={isSignOutLoading}
         />
       </View>
     </View>
   );
 };
 
-export default CashierSettings;
+export default InformationSettings;

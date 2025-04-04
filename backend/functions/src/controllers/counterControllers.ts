@@ -4,6 +4,7 @@ import { auth, realtimeDb } from "../config/firebaseConfig";
 import AuthRequest from "../types/AuthRequest";
 import { recordLog } from "../utils/recordLog";
 import { ActionType } from "../types/activityLog";
+import { ZodError } from "zod";
 
 export const addCounter = async (req: AuthRequest, res: Response) => {
   try {
@@ -32,7 +33,11 @@ export const addCounter = async (req: AuthRequest, res: Response) => {
     );
     res.status(201).json({ message: "Counter added Successfully" });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors.map((err) => err.message).join(", ") });
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };
 
@@ -180,6 +185,10 @@ export const updateCounter = async (req: AuthRequest, res: Response) => {
       }`,
     });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof ZodError) {
+      res.status(400).json({ message: error.errors.map((err) => err.message).join(", ") });
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };
