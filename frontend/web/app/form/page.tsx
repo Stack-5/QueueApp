@@ -136,7 +136,9 @@ const FormPage = () => {
               setIsAlertOpen(true);
               if ((error as { status?: number }).status === 401) {
                 router.replace("/error/unauthorized");
-              } else router.replace("/error/internal-server-error");
+              } else if ((error as { status?: number }).status === 500 ) {
+                router.replace("/error/internal-server-error");
+              }
             } finally {
               setIsEnterQueueLoading(false);
             }
