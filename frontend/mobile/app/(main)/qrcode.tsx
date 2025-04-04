@@ -40,10 +40,18 @@ const QRCodeScreen = () => {
     const notifyToggleRef = ref(realtimeDb, "notify-toggle");
     const unsubscribe = onValue(notifyToggleRef, (snapshot) => {
       console.log(snapshot.val())
-      console.log("did run")
       fetchQRCode();
     });
-    return () => unsubscribe();
+
+    const intervalId = setInterval(() => {
+      fetchQRCode();
+    }, 5 * 60 * 1000); // if the qrcode is idle then this will run
+
+    return () => {
+      clearInterval(intervalId);
+      unsubscribe();
+    };
+
   }, []);
 
   return (
