@@ -29,7 +29,7 @@ export const submitForm = async (
 
   try {
     const response = await axios.post(
-      `${apiURL}/queue/add`, 
+      `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/add`, 
       formData,
       {
         headers: {

@@ -18,7 +18,7 @@ export const useGetCustomerQueueStatus = (token: string | null, decodedToken: pe
       try {
         const apiUrl = process.env.NEXT_PUBLIC_CUID_REQUEST_URL;
         const getQueuePosiiton = await axios.get(
-          `${apiUrl}/queue/queue-position`,
+          `h${apiUrl}/queue/queue-position`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

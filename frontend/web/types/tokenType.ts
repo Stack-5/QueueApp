@@ -1,4 +1,9 @@
 import { JwtPayload } from "jwt-decode";
 
-export type newToken = JwtPayload & { id: string };
-export type pendingToken = JwtPayload & { queueID: string; stationID: string };
+export type queueToken = JwtPayload & { id: string; type: TokenType };
+export type pendingToken = queueToken & {
+  queueID: string;
+  stationID: string;
+};
+
+export type TokenType = "permission" | "queue-form" | "queue-status";
