@@ -57,9 +57,9 @@ const QueueStatus = () => {
   useEffect(() => {
     if (!token) return;
     const fcmToken = localStorage.getItem("fcmtoken");
-    console.log("fcmtoken", fcmToken);
     const saveFcmToken = async () => {
       try {
+        if (!fcmToken) return;
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_CUID_REQUEST_URL}/queue/store-fcm`,
           {
@@ -107,7 +107,10 @@ const QueueStatus = () => {
           setIsAlertOpen(true);
         }
       } catch (error) {
-        console.log((error as Error).message);
+        if (isAxiosError(error)) {
+          setAlertMessage(error.response?.data.message);
+          setIsAlertOpen(true);
+        }
       }
     };
     notifyCustomer();
