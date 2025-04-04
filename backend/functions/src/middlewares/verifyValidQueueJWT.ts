@@ -34,7 +34,6 @@ export const verifyTypedToken = (expectedTypes: TokenType[]) => {
       const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload;
 
       const allowedTypes: TokenType[] = ["permission", "queue-form", "queue-status"];
-      console.log("type",decoded.type);
       if (!decoded.type || !allowedTypes.includes(decoded.type)) {
         res.status(403).json({ message: "Unknown or invalid token type" });
         return;
@@ -53,10 +52,9 @@ export const verifyTypedToken = (expectedTypes: TokenType[]) => {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         res.status(401).json({ message: "Token has expired" });
-      } else{
+      } else {
         res.status(500).json({ message: (error as Error).message });
       }
-
     }
   };
 };
@@ -87,6 +85,3 @@ export const verifyUsedToken = async (
     res.status(500).json({ message: (error as Error).message });
   }
 };
-
-
-

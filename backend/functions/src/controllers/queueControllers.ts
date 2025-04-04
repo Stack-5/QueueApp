@@ -37,7 +37,7 @@ export const generateQrCode = async (req: Request, res: Response) => {
   }
 };
 
-export const getValidJwtForFormAccess = async(req: QueueRequest, res: Response ) => {
+export const getValidJwtForFormAccess = async (req: QueueRequest, res: Response ) => {
   try {
     if (!req.token) {
       res.status(401).json({ message: "The token is invalid or missing" });
@@ -56,10 +56,10 @@ export const getValidJwtForFormAccess = async(req: QueueRequest, res: Response )
     const payload = {
       id: uuidv4(),
       access: true,
-      type: "queue-form"
-    }
+      type: "queue-form",
+    };
 
-    const token = jwt.sign(payload, SECRET_KEY, {expiresIn:"10m"});
+    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "10m"});
     res.status(201).json({ token: token });
   } catch (error) {
     if (error instanceof TokenExpiredError) {
@@ -68,7 +68,7 @@ export const getValidJwtForFormAccess = async(req: QueueRequest, res: Response )
       res.status(500).json({ message: (error as Error).message });
     }
   }
-}
+};
 
 export const verifyCustomerToken = async (req: QueueRequest, res: Response) => {
   try {
@@ -164,7 +164,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         }
 
         const queueToken = jwt.sign(
-          { queueID: queueIDWithPrefix, stationID, email, type: "queue-status",},
+          { queueID: queueIDWithPrefix, stationID, email, type: "queue-status"},
           SECRET_KEY,
           { expiresIn: "10h" }
         );
