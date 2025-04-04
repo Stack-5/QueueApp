@@ -130,6 +130,7 @@ const QueueScreen = () => {
     return () => unsubscribe();
   }, [cashierInfo.counterID, userToken]); // ✅ Added dependencies
 
+  console.log(isDisabled)
   return (
     <View
       style={{
@@ -245,6 +246,7 @@ const QueueScreen = () => {
                       cashierInfo.counterNumber,
                       userToken
                     );
+                    setIsDisabled(false);
                   } catch (error) {
                     alert((error as Error).message);
                   } finally {
@@ -256,8 +258,7 @@ const QueueScreen = () => {
                   isCompleteTransactionLoading ||
                   isNotifyLoading ||
                   isSkippingCustomerLoading ||
-                  isGettingNextCustomerLoading ||
-                  isDisabled
+                  isGettingNextCustomerLoading 
                 }
                 loading={isGettingNextCustomerLoading}
                 extendStyle={{ flex: 1, marginLeft: wp(2) }}
@@ -293,8 +294,7 @@ const QueueScreen = () => {
                 isCompleteTransactionLoading ||
                 isNotifyLoading ||
                 isSkippingCustomerLoading ||
-                isGettingNextCustomerLoading ||
-                isDisabled
+                isGettingNextCustomerLoading
               }
               loading={isCompleteTransactionLoading}
             />
@@ -310,8 +310,7 @@ const QueueScreen = () => {
                 isCompleteTransactionLoading ||
                 isNotifyLoading ||
                 isSkippingCustomerLoading ||
-                isGettingNextCustomerLoading ||
-                isDisabled
+                isGettingNextCustomerLoading
               }
             />
           </View>
