@@ -37,6 +37,7 @@ const AdminLayout = () => {
       <Stack.Screen name="view-logs" options={{ headerTitle: "View Logs" }} />
       <Stack.Screen name="employee" options={{ headerShown: false }} />
       <Stack.Screen name="station" options={{ headerShown: false }} />
+      <Stack.Screen name="blacklist" options={{ headerShown: false }} />
     </Stack>
   );
 };

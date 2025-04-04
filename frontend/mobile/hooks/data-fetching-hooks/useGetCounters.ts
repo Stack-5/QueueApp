@@ -11,10 +11,12 @@ export const useGetCounters = () => {
   const { userToken } = useUserContext();
   const { selectedStation } = useSelectedStationContext();
   const [counters, setCounters] = useState<Counter[]>();
+  const [isGettingCountersLoading, setIsGettingCountersLoading] = useState(false)
   useEffect(() => {
     const counterRef = ref(realtimeDb, "counters");
     const getCounters = async () => {
       try {
+        setIsGettingCountersLoading(true);
         const response = await axios.get(
           `${CUID_REQUEST_URL}/counter/get/${selectedStation?.id}`,
           {
@@ -28,9 +30,12 @@ export const useGetCounters = () => {
         setCounters(response.data.counterList);
       } catch (error) {
         if (isAxiosError(error)) {
-          console.log(error.response?.data);
+          alert(error.response?.data.message);
+          return;
         }
         alert((error as Error).message);
+      } finally {
+        setIsGettingCountersLoading(false);
       }
     };
 
@@ -42,5 +47,5 @@ export const useGetCounters = () => {
     return () => unsubscribe();
   }, []);
 
-  return {counters}
+  return {counters, isGettingCountersLoading};
 };

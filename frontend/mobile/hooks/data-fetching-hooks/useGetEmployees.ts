@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { onValue, ref } from "firebase/database";
 import {  useEffect, useState } from "react";
 import { realtimeDb } from "@firebaseConfig";
@@ -26,6 +26,10 @@ const useGetEmployees =  () => {
         );
         setEmployeeList(response.data.employees);
       } catch (error) {
+        if (isAxiosError(error)) {
+          alert(error.response?.data.message);
+          return;
+        }
         alert((error as Error).message);
       } finally {
         setIsEmployeesFetching(false);

@@ -28,11 +28,10 @@ export const useGetPendingUsers = () => {
         setPendingUsers(response.data.pendingUsers);
       } catch (error) {
         if (isAxiosError(error)) {
-          console.log(error.response?.status, error.response?.data);
-        } else {
-          console.log((error as Error).message);
+          alert(error.response?.data.message);
+          return;
         }
-        console.log((error as Error).message);
+        alert((error as Error).message);
       } finally {
         setIsPendingUsersFetching(false);
       }

@@ -58,9 +58,10 @@ export const useGetActivityLogs = (userToken: string) => {
         }
       } catch (error) {
         if (isAxiosError(error)) {
-          throw new Error(error.response?.data.message);
+          alert(error.response?.data.message);
+          return;
         }
-        throw error;
+        alert((error as Error).message);
       }
     };
 

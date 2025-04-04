@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { auth } from "@firebaseConfig";
 import { useSignOutAuthStateListener } from "@hooks/useSignOutAuthStateListener";
 import { useUserContext } from "@contexts/UserContext";
@@ -12,6 +12,7 @@ import {
 
 const PendingScreen = () => {
   const { userInfo, userToken } = useUserContext();
+  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   console.log("role in pending", userInfo);
   console.log("token in pending", userToken);
   useSignOutAuthStateListener();
@@ -63,7 +64,17 @@ const PendingScreen = () => {
       <View style={{ width: "80%", marginTop: hp(1) }}>
         <NeuQueueButtonYellow
           title="Sign Out"
-          buttonFn={async () => await auth.signOut()}
+          buttonFn={async () => {
+            try {
+              setIsSignOutLoading(true);
+              await auth.signOut()
+            } catch (error) {
+              alert((error as Error).message);
+            } finally {
+              setIsSignOutLoading(false)
+            }
+          }}
+          loading={isSignOutLoading}
         />
       </View>
     </View>

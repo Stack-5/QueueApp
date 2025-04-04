@@ -1,6 +1,5 @@
 import { Text, View } from "react-native";
 import { useState } from "react";
-import { useRouter } from "expo-router";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
@@ -15,8 +14,8 @@ import { adminOptions, optionMethods } from "@methods/admin/adminOptions";
 
 const AdminSettingsScreen = () => {
   useSignOutAuthStateListener();
-  const router = useRouter();
   const { userInfo } = useUserContext();
+  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
 
   return (
     <View
@@ -65,9 +64,20 @@ const AdminSettingsScreen = () => {
         <NeuQueueButtonYellow
           title="Sign out"
           buttonFn={async () => {
-            auth.signOut();
-            await AsyncStorage.removeItem("isverified");
+            try {
+              setIsSignOutLoading(true);
+              await auth.signOut();
+              await AsyncStorage.removeItem("isverified");
+            } catch (error) {
+              alert((error as Error).message);
+            } finally {
+              setIsSignOutLoading(false);
+            }
+
           }}
+          loading={
+            isSignOutLoading
+          }
         />
       </View>
     </View>
