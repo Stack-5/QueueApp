@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import QRcode from "qrcode";
 import { firestoreDb, realtimeDb } from "../config/firebaseConfig";
 import { addToQueueSchema } from "../zod-schemas/addToQueue";
@@ -10,6 +10,9 @@ import Counter from "../types/Counter";
 import { sendNotification } from "../utils/sendNotification";
 import Customer from "../types/Customer";
 import { sendEmail } from "../utils/sendEmail";
+import { recordLog } from "../utils/recordLog";
+import { ActionType } from "../types/activityLog";
+import { ZodError } from "zod";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
@@ -29,7 +32,11 @@ export const generateQrCode = async (req: Request, res: Response) => {
 
     res.status(201).json({ qrCode: qrCodeDataUrl, token: token });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof TokenExpiredError) {
+      res.status(401).json({message: "Token has expired, please sign in again"});
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };
 
@@ -54,8 +61,20 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
       return;
     }
     const parsedBody = addToQueueSchema.parse(req.body);
-    const { purpose, email, timestamp, customerStatus, stationID } =
-      parsedBody;
+    const { purpose, email, timestamp, customerStatus, stationID } = parsedBody;
+
+    const blacklistRef = realtimeDb
+      .ref("blacklist")
+      .orderByChild("email")
+      .equalTo(email);
+    const blacklistSnapshot = await blacklistRef.get();
+
+    if (blacklistSnapshot.exists()) {
+      res
+        .status(403)
+        .json({ message: "You are banned from joining the queue." });
+      return;
+    }
     const queueDocRef = firestoreDb.collection("queue-numbers").doc(purpose);
     const queueCollectionRef = firestoreDb.collection("queue");
     const invalidTokenRef = firestoreDb
@@ -129,12 +148,26 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         return { queueIDWithPrefix, queueToken };
       }
     );
+
+    await recordLog(
+      email,
+      ActionType.JOIN_QUEUE,
+      `${email} joined the queue at ${stationSnapshot.val().name}`
+    );
     res.status(201).json({
       queueNumber: queueTransaction.queueIDWithPrefix,
       queueToken: queueTransaction.queueToken,
     });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message });
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json({ message: error.errors.map((err) => err.message).join(", ") });
+    } else if (error instanceof TokenExpiredError) {
+      res.status(401).json({ message: "Token has expired" });
+    } else {
+      res.status(500).json({ message: (error as Error).message });
+    }
   }
 };
 
@@ -142,7 +175,9 @@ export const getAvailableStation = async (req: QueueRequest, res: Response) => {
   try {
     const { purpose }: { purpose: CashierType } = req.body;
     if (!SECRET_KEY || !NEUQUEUE_ROOT_URL) {
-      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      res
+        .status(500)
+        .json({ message: "Missing Secret in environment variables!" });
       return;
     }
     const stationRef = realtimeDb.ref("stations");
@@ -200,7 +235,9 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
     }
 
     if (!SECRET_KEY) {
-      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      res
+        .status(500)
+        .json({ message: "Missing Secret in environment variables!" });
       return;
     }
     const decodedToken = jwt.verify(req.token, SECRET_KEY, {
@@ -211,10 +248,10 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       email: string;
     };
 
-
     const { queueID, stationID } = decodedToken;
     if (!queueID && !stationID) {
       res.status(401).json({ message: "Invalid or missing tokens" });
+      return;
     }
     const queueDocRef = firestoreDb.collection("queue").doc(queueID);
     const queueDoc = await queueDocRef.get();
@@ -227,20 +264,27 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       res.status(404).json({ message: "Invalid queue data" });
       return;
     }
-    if (customerData.customerStatus === "ongoing") {
-      res.status(200).json({ position: 0, message: "You are now being served!" });
+    const statusMessages: Record<
+      string,
+      { position: number; message: string }
+    > = {
+      ongoing: { position: 0, message: "You are now being served!" },
+      complete: { position: 0, message: "Your transaction is complete" },
+      unsuccessful: {
+        position: 0,
+        message: "Your queue was skipped, either you took too long to respond",
+      },
+    };
+
+    if (customerData.customerStatus in statusMessages) {
+      res.status(401).json(statusMessages[customerData.customerStatus]);
       return;
     }
-    if (customerData.customerStatus === "complete") {
-      res.status(401).json({ position: 0, message: "You're transaction is complete" });
-      return;
-    }
-    const customerQueueTimestamp = customerData.timestamp;
     const queueSnapshot = await firestoreDb
       .collection("queue")
       .where("stationID", "==", stationID)
       .where("customerStatus", "==", "pending")
-      .where("timestamp", "<", customerQueueTimestamp)
+      .where("timestamp", "<", customerData.timestamp)
       .get();
 
     res.status(200).json({ position: queueSnapshot.size + 1 });
@@ -287,12 +331,10 @@ export const notifyOnSuccessScan = async (req: QueueRequest, res: Response) => {
       return;
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Toggled successfully",
-        newValue: result.snapshot.val(),
-      });
+    res.status(200).json({
+      message: "Toggled successfully",
+      newValue: result.snapshot.val(),
+    });
   } catch (error) {
     if ((error as Error).message === "This token already notified") {
       res.status(200).json({ message: "This token already notified" });
@@ -309,7 +351,9 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
       return;
     }
     if (!SECRET_KEY) {
-      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      res
+        .status(500)
+        .json({ message: "Missing Secret in environment variables!" });
       return;
     }
     const decodedToken = jwt.verify(req.token, SECRET_KEY, {
@@ -319,42 +363,60 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
       stationID: string;
       email: string;
     };
-    const { queueID, email } = decodedToken;
+    const { queueID, email, stationID } = decodedToken;
     const queueRef = firestoreDb.collection("queue").doc(queueID);
     await queueRef.delete();
     const invalidTokenRef = firestoreDb
       .collection("invalid-token")
       .doc(req.token);
     await invalidTokenRef.set({ email, timestamp: Date.now() });
+    const station = await realtimeDb.ref(`stations/${stationID}`).get();
+    await recordLog(
+      email,
+      ActionType.LEAVE_QUEUE,
+      `${email} left the queue at ${station.val().name}`
+    );
     res.status(200).json({ message: "Successfully left the queue" });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
 };
 
-export const displayCurrentServing = async (req: QueueRequest, res: Response) => {
+export const displayCurrentServing = async (
+  req: QueueRequest,
+  res: Response
+) => {
   try {
     if (!req.token) {
       res.status(400).json({ message: "Missing token" });
       return;
     }
     if (!SECRET_KEY) {
-      res.status(500).json({ message: "Missing Secret in environment variables!" });
+      res
+        .status(500)
+        .json({ message: "Missing Secret in environment variables!" });
       return;
     }
-    const decodedToken = jwt.verify(req.token, SECRET_KEY, {algorithms: ["HS256"]}) as {
+    const decodedToken = jwt.verify(req.token, SECRET_KEY, {
+      algorithms: ["HS256"],
+    }) as {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
       email: string;
     };
 
-    const {stationID} = decodedToken;
+    const { stationID } = decodedToken;
 
     const countersRef = realtimeDb.ref("counters");
-    const snapshot = await countersRef.orderByChild("stationID").equalTo(stationID).once("value");
+    const snapshot = await countersRef
+      .orderByChild("stationID")
+      .equalTo(stationID)
+      .once("value");
 
     if (!snapshot.exists()) {
-      res.status(404).json({ message: "No counters found for the given stationID" });
+      res
+        .status(404)
+        .json({ message: "No counters found for the given stationID" });
     }
 
     const counters: Record<string, Counter> = snapshot.val();
@@ -362,7 +424,7 @@ export const displayCurrentServing = async (req: QueueRequest, res: Response) =>
       .filter((counter) => counter.serving && counter.serving.trim() !== "")
       .map(({ counterNumber, serving }) => ({ counterNumber, serving }));
 
-    res.status(200).json({servingCounters});
+    res.status(200).json({ servingCounters });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
@@ -388,7 +450,7 @@ export const getStationInfo = async (req: QueueRequest, res: Response) => {
 
     const { stationID } = decodedToken;
     if (!stationID) {
-      res.status(403).json({message: "Invalid or missing tokens"});
+      res.status(403).json({ message: "Invalid or missing tokens" });
       return;
     }
     const stationRef = realtimeDb.ref(`stations/${stationID}`);
@@ -406,9 +468,9 @@ export const getStationInfo = async (req: QueueRequest, res: Response) => {
 
 export const storeFCMToken = async (req: QueueRequest, res: Response) => {
   try {
-    const {fcmToken} = req.body;
+    const { fcmToken } = req.body;
     if (!fcmToken) {
-      res.status(400).json({message: "FCM token is missing!"});
+      res.status(400).json({ message: "FCM token is missing!" });
       return;
     }
     if (!req.token) {
@@ -426,14 +488,17 @@ export const storeFCMToken = async (req: QueueRequest, res: Response) => {
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
     };
-    const {queueID} = decodedToken;
+    const { queueID } = decodedToken;
     const fcmDoc = firestoreDb.collection("fcm-tokens").doc(queueID);
-    await fcmDoc.set({
-      fcmToken: fcmToken,
-    }, {merge: true});
+    await fcmDoc.set(
+      {
+        fcmToken: fcmToken,
+      },
+      { merge: true }
+    );
     res.status(200).json({ message: "FCM token stored successfully" });
   } catch (error) {
-    res.status(500).json({ message: (error as Error).message});
+    res.status(500).json({ message: (error as Error).message });
   }
 };
 
@@ -455,7 +520,7 @@ export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
       stationID: string;
     };
 
-    const {stationID} = decodedToken;
+    const { stationID } = decodedToken;
     // Fetch the queue sorted by `timestamp` (FIFO)
     const queueSnapshot = await firestoreDb
       .collection("queue")
@@ -475,24 +540,38 @@ export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
       .doc(stationID)
       .get();
 
-    const previouslyNotified = notifiedSnapshot.exists ? notifiedSnapshot.data()?.notifiedCustomers || [] : [];
+    const previouslyNotified = notifiedSnapshot.exists ?
+      notifiedSnapshot.data()?.notifiedCustomers || [] :
+      [];
 
     // Identify newly added customers to the top 4
     const newNotified = queueList.map((customer) => customer.queueIDP);
-    const customersToNotify = newNotified.filter((id) => !previouslyNotified.includes(id));
+    const customersToNotify = newNotified.filter(
+      (id) => !previouslyNotified.includes(id)
+    );
 
     // Send notifications only to the new customers
     for (const queueIDP of customersToNotify) {
-      const customerDoc = await firestoreDb.collection("queue").doc(queueIDP).get();
+      const customerDoc = await firestoreDb
+        .collection("queue")
+        .doc(queueIDP)
+        .get();
       const customerData = customerDoc.data();
 
       if (customerData) {
         // Get FCM token for push notification
-        const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueIDP).get();
+        const fcmDoc = await firestoreDb
+          .collection("fcm-tokens")
+          .doc(queueIDP)
+          .get();
         if (fcmDoc.exists) {
           const fcmToken = fcmDoc.data()?.fcmToken;
           if (fcmToken) {
-            await sendNotification(fcmToken, "You are in the top 4!", "Please be ready for your turn.");
+            await sendNotification(
+              fcmToken,
+              "You are in the top 4!",
+              "Please be ready for your turn."
+            );
           }
         }
 
@@ -518,12 +597,15 @@ export const checkAndNotifyQueue = async (req: QueueRequest, res: Response) => {
   }
 };
 
-export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) => {
+export const notifyCurrentlyServing = async (
+  req: QueueRequest,
+  res: Response
+) => {
   try {
-    const {counterNumber}: {counterNumber: string} = req.body;
+    const { counterNumber }: { counterNumber: string } = req.body;
 
     if (!counterNumber) {
-      res.status(400).json({message: "Missing Counter Number"});
+      res.status(400).json({ message: "Missing Counter Number" });
       return;
     }
     if (!req.token) {
@@ -540,7 +622,7 @@ export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) =
       queueID: string; // This is the document ID (e.g., "R002")
       stationID: string;
     };
-    const {queueID} = decodedToken;
+    const { queueID } = decodedToken;
     const queueDoc = await firestoreDb.collection("queue").doc(queueID).get();
     if (!queueDoc.exists) {
       res.status(404).json({ message: "Queue not found" });
@@ -554,11 +636,18 @@ export const notifyCurrentlyServing = async (req: QueueRequest, res: Response) =
     }
 
     // Get FCM token for the customer
-    const fcmDoc = await firestoreDb.collection("fcm-tokens").doc(queueID).get();
+    const fcmDoc = await firestoreDb
+      .collection("fcm-tokens")
+      .doc(queueID)
+      .get();
     if (fcmDoc.exists) {
       const fcmToken = fcmDoc.data()?.fcmToken;
       if (fcmToken) {
-        await sendNotification(fcmToken, "It's your turn!", `Please proceed to the counter ${counterNumber}.`);
+        await sendNotification(
+          fcmToken,
+          "It's your turn!",
+          `Please proceed to the counter ${counterNumber}.`
+        );
       }
     }
 

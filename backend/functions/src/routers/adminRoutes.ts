@@ -3,11 +3,14 @@ import { verifyAuthTokenAndDomain } from "../middlewares/verifyAuthTokenAndDomai
 import { verifyRole } from "../middlewares/verifyRole";
 import {
   assignUserRole,
+  blockCustomerEmail,
   getActivityLogs,
   getAvailableCashierEmployees,
+  getBlacklistedEmails,
   getEmployees,
   getPendingUsers,
   getUserData,
+  removeBlacklistedEmail,
 } from "../controllers/adminController";
 
 // eslint-disable-next-line new-cap
@@ -20,5 +23,8 @@ router.post("/set-role", assignUserRole);
 router.get("/user-data/:uid", getUserData);
 router.get("/available-cashier-employees", getAvailableCashierEmployees);
 router.get("/get-activity", getActivityLogs);
+router.get("/get-blacklist", getBlacklistedEmails);
+router.post("/block-email", blockCustomerEmail);
+router.delete("/unblock-email/:email", removeBlacklistedEmail);
 
 export default router;

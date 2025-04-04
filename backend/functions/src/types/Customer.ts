@@ -1,6 +1,6 @@
 type Customer = {
   email: string;
-  customerStatus: "pending" | "ongoing" | "served"; // Define possible statuses
+  customerStatus: "pending" | "ongoing" | "complete" | "unsuccessful"; // Define possible statuses
   purpose: string;
   queueID: number;
   stationID: string;
