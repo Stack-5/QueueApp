@@ -1,9 +1,8 @@
-import { firebaseKeys } from "../firebaseKeys";
-
+importScripts("/firebase-config.js"); 
 importScripts("https://www.gstatic.com/firebasejs/11.4.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/11.4.0/firebase-messaging-compat.js");
 
-firebase.initializeApp(firebaseKeys);
+firebase.initializeApp(self.firebaseConfig);
 
 const messaging = firebase.messaging();
 
@@ -13,6 +12,6 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(payload.notification.title, {
     body: payload.notification.body,
-    icon: "/logo.png", // Replace with neuqueue logo
+    icon: "/icon.png", // Replace with neuqueue logo
   });
 });

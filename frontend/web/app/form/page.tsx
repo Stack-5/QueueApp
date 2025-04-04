@@ -132,17 +132,16 @@ const FormPage = () => {
               router.replace("/queue-status");
             } catch (error) {
               const submitErrorMessage = (error as Error).message;
-              if (submitErrorMessage === "unauthorized") {
-                router.replace("/error/unauthorized"); // Redirect to custom 401 page
-                return;
-              }
-
-              if (submitErrorMessage === "server-error") {
-                router.replace("/error/internal-server-error"); // Redirect to custom 500 page
-                return;
-              }
               setAlertMessage(submitErrorMessage);
               setIsAlertOpen(true);
+              if ((error as { status?: number }).status === 401) {
+                router.replace("/error/unauthorized"); // Redirect to custom 401 page
+              } else if ((error as { status?: number }).status === 500) {
+                router.replace("/error/internal-server-error"); // Redirect to custom 500 page
+              } else {
+                router.replace("/error/general-error"); // Redirect to a general error page
+              }
+
             } finally {
               setIsEnterQueueLoading(false);
             }

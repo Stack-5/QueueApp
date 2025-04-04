@@ -19,8 +19,8 @@ export const enterQueue = async(purpose: CashierType, email: string, stationID: 
   } catch (error) {
     if (isAxiosError(error)) {
       if (error.response) {
-        const { data } = error.response;
-        throw new Error(data.message || "An unexpected error occurred");
+        const { data, status } = error.response;
+        throw { message: data.message || "An unexpected error occurred", status };
       }
     }
 
