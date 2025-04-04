@@ -298,13 +298,15 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       string,
       { position: number; message: string }
     > = {
-      ongoing: { position: 0, message: "You are now being served!" },
       complete: { position: 0, message: "Your transaction is complete" },
       unsuccessful: {
         position: 0,
         message: "Your queue was skipped, either you took too long to respond",
       },
     };
+    if (customerData.customerStatus === "ongoing") {
+      res.status(200).json({ position: 0, message: "Your transaction is ongoing" })
+    }
 
     if (customerData.customerStatus in statusMessages) {
       res.status(401).json(statusMessages[customerData.customerStatus]);
