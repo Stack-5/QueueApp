@@ -305,7 +305,7 @@ export const getQueuePosition = async (req: QueueRequest, res: Response) => {
       },
     };
     if (customerData.customerStatus === "ongoing") {
-      res.status(200).json({ position: 0, message: "Your transaction is ongoing" })
+      res.status(200).json({ position: 0, message: "Your transaction is ongoing" });
     }
 
     if (customerData.customerStatus in statusMessages) {
