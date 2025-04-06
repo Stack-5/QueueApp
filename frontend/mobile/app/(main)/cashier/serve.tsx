@@ -18,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import NeuQueueWarningButton from "@components/NeuQueueWarningButton";
 import { skipCustomer } from "@methods/cashier/skipCustomer";
 import NeuQueueSuccessButton from "@components/NeuQueueSuccessButton";
+import { Badge } from "react-native-elements";
 
 const QueueScreen = () => {
   const { userToken } = useUserContext();
@@ -26,6 +27,7 @@ const QueueScreen = () => {
   const [currentServingQueueID, setCurrentServingQueueID] = useState<
     string | null
   >(null);
+  const [remainingPendingCount, setRemainingPendingCount] = useState(0);
 
   const [isCompleteTransactionLoading, setIsCompleteTransactionLoading] =
     useState(false);
@@ -68,6 +70,31 @@ const QueueScreen = () => {
       { cancelable: false } // Prevents dismissing by tapping outside
     );
   };
+
+  useEffect(() => {
+    const queueCountRef = ref(
+      realtimeDb,
+      `toggle-queue-count/${cashierInfo.stationID}`
+    );
+    const getRemainingPendingCustomer = async () => {
+      try {
+        const response = await axios.get(
+          `${CUID_REQUEST_URL}/cashier/get-remaining-pending?stationID=${cashierInfo.stationID}`,
+          { headers: { Authorization: `Bearer ${userToken}` } }
+        );
+        setRemainingPendingCount(response.data.remainingCustomersCount);
+      } catch (error) {
+        if (isAxiosError(error)) {
+          alert(error.response?.data.message);
+        }
+      }
+    };
+
+    const unsubscribe = onValue(queueCountRef, () => {
+      getRemainingPendingCustomer();
+    });
+    return () => unsubscribe();
+  },[]);
 
   useEffect(() => {
     if (
@@ -130,7 +157,6 @@ const QueueScreen = () => {
     return () => unsubscribe();
   }, [cashierInfo.counterID, userToken]); // ✅ Added dependencies
 
-  console.log(isDisabled)
   return (
     <View
       style={{
@@ -159,8 +185,8 @@ const QueueScreen = () => {
               shadowOpacity: 0.3, // Opacity of shadow
               shadowRadius: 5, // Blur radius
               elevation: 6, // Android shadow
-              marginTop:hp(2),
-              marginHorizontal:wp(8)
+              marginTop: hp(2),
+              marginHorizontal: wp(8),
             }}
           >
             <Text style={[styles.servingText, { fontSize: wp(8) }]}>
@@ -228,41 +254,60 @@ const QueueScreen = () => {
                 loading={isNotifyLoading}
                 extendStyle={{ flex: 1, marginRight: wp(2) }}
               />
-              <NeuQueueButtonYellow
-                title="Next"
-                buttonFn={async () => {
-                  try {
-                    setIsGettingNextCustomerLoading(true);
-                    if (
-                      currentServingQueueID ||
-                      !cashierInfo.counterID ||
-                      !cashierInfo.stationID ||
-                      !cashierInfo.counterNumber
-                    )
-                      return;
-                    await serveCustomer(
-                      cashierInfo.stationID,
-                      cashierInfo.counterID,
-                      cashierInfo.counterNumber,
-                      userToken
-                    );
-                    setIsDisabled(false);
-                  } catch (error) {
-                    alert((error as Error).message);
-                  } finally {
-                    setIsGettingNextCustomerLoading(false);
+              <View>
+                <Badge
+                  value={remainingPendingCount}
+                  containerStyle={{
+                    position: "absolute",
+                    top: -10,
+                    right: -10,
+                    opacity: currentServingQueueID !== null ? 0.5 : 1,
+                    zIndex: 2,
+                  }}
+                  badgeStyle={{
+                    width: wp(7),
+                    height: wp(7),
+                    borderRadius: wp(3.5),
+                  }}
+                  textStyle={{ fontSize: wp(4) }}
+                  status="error"
+                />
+                <NeuQueueButtonYellow
+                  title="Next"
+                  buttonFn={async () => {
+                    try {
+                      setIsGettingNextCustomerLoading(true);
+                      if (
+                        currentServingQueueID ||
+                        !cashierInfo.counterID ||
+                        !cashierInfo.stationID ||
+                        !cashierInfo.counterNumber
+                      )
+                        return;
+                      await serveCustomer(
+                        cashierInfo.stationID,
+                        cashierInfo.counterID,
+                        cashierInfo.counterNumber,
+                        userToken
+                      );
+                      setIsDisabled(false);
+                    } catch (error) {
+                      alert((error as Error).message);
+                    } finally {
+                      setIsGettingNextCustomerLoading(false);
+                    }
+                  }}
+                  disable={
+                    currentServingQueueID !== null ||
+                    isCompleteTransactionLoading ||
+                    isNotifyLoading ||
+                    isSkippingCustomerLoading ||
+                    isGettingNextCustomerLoading
                   }
-                }}
-                disable={
-                  currentServingQueueID !== null ||
-                  isCompleteTransactionLoading ||
-                  isNotifyLoading ||
-                  isSkippingCustomerLoading ||
-                  isGettingNextCustomerLoading 
-                }
-                loading={isGettingNextCustomerLoading}
-                extendStyle={{ flex: 1, marginLeft: wp(2) }}
-              />
+                  loading={isGettingNextCustomerLoading}
+                  extendStyle={{ flex: 1, marginLeft: wp(2) }}
+                />
+              </View>
             </View>
 
             <NeuQueueSuccessButton
