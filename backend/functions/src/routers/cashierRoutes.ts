@@ -5,6 +5,7 @@ import {
   completeTransaction,
   getCashierEmployeeInformation,
   getCurrentServing,
+  getRemainingPendingCustomerCount,
   notifyCustomer,
   serveCustomer,
   skipCustomer,
@@ -20,5 +21,6 @@ router.post("/complete-serve", completeTransaction);
 router.post("/get-current", getCurrentServing);
 router.post("/notify-customer", notifyCustomer);
 router.post("/skip-customer", skipCustomer);
+router.get("/get-remaining-pending", getRemainingPendingCustomerCount);
 
 export default router;

@@ -184,6 +184,10 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
       ActionType.JOIN_QUEUE,
       `${email} joined the queue at ${stationSnapshot.val().name}`
     );
+    const toggleStationQueueCountRef = realtimeDb.ref(`toggle-queue-count/${stationID}`);
+    await toggleStationQueueCountRef.transaction((currentValue) => {
+      return currentValue === 1 ? 0 : 1;
+    });
     res.status(201).json({
       queueNumber: queueTransaction.queueIDWithPrefix,
       queueToken: queueTransaction.queueToken,
@@ -397,12 +401,46 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
     };
     const { queueID, email, stationID } = decodedToken;
     const queueRef = firestoreDb.collection("queue").doc(queueID);
-    await queueRef.delete();
+    await queueRef.set({customerStatus: "unsuccessful"}, {merge: true});
     const invalidTokenRef = firestoreDb
       .collection("invalid-token")
       .doc(req.token);
     await invalidTokenRef.set({ email, timestamp: Date.now() });
     const station = await realtimeDb.ref(`stations/${stationID}`).get();
+    // check if the customer is in the current serving
+    const currentServingRef = realtimeDb.ref(`current-serving/${stationID}`);
+    type CounterWithID = {[key: string]: Counter};
+    await currentServingRef.transaction((currentServing: CounterWithID) => {
+      if (!currentServing) return;
+
+      // If the queueID is in current-serving, delete it
+      const matchingCounterNumber = Object.keys(currentServing).find(
+        (counterNumber) => currentServing[counterNumber].serving === queueID
+      );
+
+      if (matchingCounterNumber) {
+        delete currentServing[matchingCounterNumber];
+      }
+      return currentServing;
+    });
+    const countersRef = realtimeDb.ref("counters");
+    const counterSnapshot = await countersRef.once("value");
+    const counters = counterSnapshot.val();
+
+    const countersWithKey: {[key: string]: Counter} = {};
+    Object.keys(counters).forEach((counterKey) => {
+      const counterData = counters[counterKey] as Counter;
+      countersWithKey[counterKey] = counterData;
+    });
+
+    for (const counterKey of Object.keys(counters)) {
+      const counter = counters[counterKey] as Counter;
+      if (counter.serving === queueID) {
+        await countersRef.child(counterKey).update({ serving: null });
+        break;
+      }
+    }
+
     await recordLog(
       email,
       ActionType.LEAVE_QUEUE,
