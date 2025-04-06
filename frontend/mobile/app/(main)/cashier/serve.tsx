@@ -72,6 +72,7 @@ const QueueScreen = () => {
   };
 
   useEffect(() => {
+    if (!cashierInfo) return;
     const queueCountRef = ref(
       realtimeDb,
       `toggle-queue-count/${cashierInfo.stationID}`
@@ -83,6 +84,7 @@ const QueueScreen = () => {
           { headers: { Authorization: `Bearer ${userToken}` } }
         );
         setRemainingPendingCount(response.data.remainingCustomersCount);
+        console.log("count", response.data.remainingCustomersCount);
       } catch (error) {
         if (isAxiosError(error)) {
           alert(error.response?.data.message);
@@ -90,11 +92,13 @@ const QueueScreen = () => {
       }
     };
 
-    const unsubscribe = onValue(queueCountRef, () => {
-      getRemainingPendingCustomer();
+    const unsubscribe = onValue(queueCountRef, (snapshot) => {
+      if (snapshot.exists()) {
+        getRemainingPendingCustomer();
+      }
     });
     return () => unsubscribe();
-  },[]);
+  }, [cashierInfo]);
 
   useEffect(() => {
     if (
