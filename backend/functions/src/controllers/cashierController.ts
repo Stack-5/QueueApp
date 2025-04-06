@@ -86,6 +86,10 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
       ActionType.SERVE_CUSTOMER,
       `${displayName} serves customer ${customerDocID} (${customerEmail})`
     );
+    const queueCountRef = realtimeDb.ref(`toggle-queue-count/${stationID}`);
+    await queueCountRef.transaction((currentValue) => {
+      return currentValue === 1 ? 0 : 1;
+    });
     res.status(200).json({
       message: "Customer assigned to cashier",
       customer: customerDocID,
@@ -333,3 +337,20 @@ export const skipCustomer = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getRemainingPendingCustomerCount = async (req: AuthRequest, res:Response) => {
+  try {
+    const {stationID} = req.query;
+    if (!stationID) {
+      res.status(400).json({message: "Missing StationID"});
+      return;
+    }
+    const queueRef = firestoreDb.collection("queue")
+      .where("customerStatus", "==", "pending")
+      .where("stationID", "==", stationID.toString());
+
+    const remainingQueue = await queueRef.get();
+    res.status(200).json({remainingCustomersCount: remainingQueue.size});
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
