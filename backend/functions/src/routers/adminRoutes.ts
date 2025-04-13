@@ -5,6 +5,7 @@ import {
   assignUserRole,
   blockCustomerEmail,
   getActivityLogs,
+  getAnalytics,
   getAvailableCashierEmployees,
   getBlacklistedEmails,
   getEmployees,
@@ -25,6 +26,7 @@ router.get("/available-cashier-employees", getAvailableCashierEmployees);
 router.get("/get-activity", getActivityLogs);
 router.get("/get-blacklist", getBlacklistedEmails);
 router.post("/block-email", blockCustomerEmail);
+router.get("/get-analytics", getAnalytics);
 router.delete("/unblock-email/:email", removeBlacklistedEmail);
 
 export default router;
