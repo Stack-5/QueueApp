@@ -32,6 +32,11 @@ const adminOptions: OptionAdminType[] = [
     iconName: "account-cancel",
     label: "Blacklist",
   },
+  {
+    key: 6,
+    iconName:"google-analytics",
+    label:"View Analytics"
+  }
 ];
 
 const optionMethods = (key: number) => {
@@ -56,6 +61,10 @@ const optionMethods = (key: number) => {
       return () => {
         router.push("/admin/blacklist/blocked-email-list");
       };
+    case 6: 
+      return () => {
+        router.push("/admin/analytics");
+      }
     default:
       return () => {};
   }

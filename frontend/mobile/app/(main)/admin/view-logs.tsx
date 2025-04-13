@@ -75,6 +75,7 @@ const ViewLogs = () => {
         borderRadius: wp(3),
         marginHorizontal: wp(3),
         marginVertical: hp(1.5),
+        maxHeight:hp(65)
       }}
     >
       <SectionList
