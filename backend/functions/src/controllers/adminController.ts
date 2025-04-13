@@ -307,3 +307,52 @@ export const removeBlacklistedEmail = async (req: AuthRequest, res: Response) =>
     res.status(500).json({ message: (error as Error).message });
   }
 };
+
+
+export const getAnalytics = async (req: AuthRequest, res: Response) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      res.status(400).json({ message: "Missing startDate or endDate in query." });
+      return;
+    }
+
+    const start = new Date(startDate as string).getTime();
+    const end = new Date(endDate as string).getTime();
+
+    const historySnapshot = await firestoreDb.collection("queue-history").listDocuments();
+
+    const analytics: Record <string, {total:number, successful: number, unsuccessful: number}> = {};
+    for (const docRef of historySnapshot) {
+      const docId = docRef.id;
+      console.log(docRef.id);
+      const docDate = new Date(docId).getTime();
+      if (docDate >= start && docDate <= end) {
+        const entriesSnapshot = await docRef.collection("entries").get();
+        let total = 0;
+        let successful = 0;
+        let unsuccessful = 0;
+        console.log("entriesSnapshot", entriesSnapshot.docs);
+        entriesSnapshot.forEach((entryDoc) => {
+          const data = entryDoc.data();
+          total++;
+
+          if (data.customerStatus === "complete") {
+            successful++;
+          } else {
+            unsuccessful++;
+          }
+        });
+        analytics[docId] = {total, successful, unsuccessful};
+      }
+    }
+
+    res.status(200).json({
+      analytics,
+    });
+  } catch (error) {
+    console.error("Analytics Error:", error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
