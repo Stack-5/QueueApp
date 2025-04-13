@@ -38,6 +38,7 @@ const AdminLayout = () => {
       <Stack.Screen name="employee" options={{ headerShown: false }} />
       <Stack.Screen name="station" options={{ headerShown: false }} />
       <Stack.Screen name="blacklist" options={{ headerShown: false }} />
+      <Stack.Screen name="analytics" options={{ headerTitle: "Analytics"  }} />
     </Stack>
   );
 };

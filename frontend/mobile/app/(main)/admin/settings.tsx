@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useState } from "react";
 import {
   heightPercentageToDP as hp,
@@ -27,6 +27,7 @@ const AdminSettingsScreen = () => {
           alignContent: "center",
           justifyContent: "center",
           paddingHorizontal: wp(2),
+          paddingVertical:hp(8)
         }}
       >
         <Text
@@ -52,15 +53,16 @@ const AdminSettingsScreen = () => {
           {userInfo?.name}
         </Text>
 
-        {adminOptions.map((option) => (
-          <NeuQueueSettingsButton
-            iconName={option.iconName}
-            label={option.label}
-            onPress={optionMethods(option.key)}
-            key={option.key}
-          />
-        ))}
-
+        <ScrollView style={{marginVertical:hp(2)}}>
+          {adminOptions.map((option) => (
+            <NeuQueueSettingsButton
+              iconName={option.iconName}
+              label={option.label}
+              onPress={optionMethods(option.key)}
+              key={option.key}
+            />
+          ))}
+        </ScrollView>
         <NeuQueueButtonYellow
           title="Sign out"
           buttonFn={async () => {
@@ -73,11 +75,8 @@ const AdminSettingsScreen = () => {
             } finally {
               setIsSignOutLoading(false);
             }
-
           }}
-          loading={
-            isSignOutLoading
-          }
+          loading={isSignOutLoading}
         />
       </View>
     </View>
