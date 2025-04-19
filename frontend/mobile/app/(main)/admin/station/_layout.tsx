@@ -1,12 +1,10 @@
 import { SelectedStationProvider } from "@contexts/SelectedStationContext";
-import { StationProvider } from "@contexts/StationContext";
 import { AntDesign } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { widthPercentageToDP as wp } from "react-native-responsive-screen";
 const StationLayout = () => {
   return (
-    <StationProvider>
       <SelectedStationProvider>
         <Stack
           screenOptions={{
@@ -45,7 +43,6 @@ const StationLayout = () => {
           <Stack.Screen name="counter" options={{ headerShown: false }} />
         </Stack>
       </SelectedStationProvider>
-    </StationProvider>
   );
 };
 

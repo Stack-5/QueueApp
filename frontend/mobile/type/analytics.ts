@@ -1,5 +1,5 @@
 export type AnalyticsData = {
-  [date: string]: {
+  [stationID: string]: {
     total: number;
     successful: number;
     unsuccessful: number;
