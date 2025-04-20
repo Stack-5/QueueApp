@@ -330,21 +330,20 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
       const docDate = new Date(docId).getTime();
       if (docDate >= start && docDate <= end) {
         const entriesSnapshot = await docRef.collection("entries").get();
-        let total = 0;
-        let successful = 0;
-        let unsuccessful = 0;
-        console.log("entriesSnapshot", entriesSnapshot.docs);
         entriesSnapshot.forEach((entryDoc) => {
           const data = entryDoc.data();
-          total++;
+          const {stationID} = data;
+          if (!analytics[stationID]) {
+            analytics[stationID] = { total: 0, successful: 0, unsuccessful: 0 };
+          }
 
+          analytics[stationID].total++;
           if (data.customerStatus === "complete") {
-            successful++;
+            analytics[stationID].successful++;
           } else {
-            unsuccessful++;
+            analytics[stationID].unsuccessful++;
           }
         });
-        analytics[docId] = {total, successful, unsuccessful};
       }
     }
 
