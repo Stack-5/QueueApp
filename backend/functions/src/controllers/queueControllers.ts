@@ -37,7 +37,7 @@ export const generateQrCode = async (req: Request, res: Response) => {
   }
 };
 
-export const getValidJwtForFormAccess = async (req: QueueRequest, res: Response ) => {
+export const getValidJwtForFormAccess = async (req: QueueRequest, res: Response) => {
   try {
     if (!req.token) {
       res.status(401).json({ message: "The token is invalid or missing" });
@@ -59,11 +59,11 @@ export const getValidJwtForFormAccess = async (req: QueueRequest, res: Response 
       type: "queue-form",
     };
 
-    const token = jwt.sign(payload, SECRET_KEY, {expiresIn: "10m"});
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "10m" });
     res.status(201).json({ token: token });
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      res.status(401).json({ message: "Token has expired, please sign in again"});
+      res.status(401).json({ message: "Token has expired, please sign in again" });
     } else {
       res.status(500).json({ message: (error as Error).message });
     }
@@ -164,7 +164,7 @@ export const addQueue = async (req: QueueRequest, res: Response) => {
         }
 
         const queueToken = jwt.sign(
-          { queueID: queueIDWithPrefix, stationID, email, type: "queue-status"},
+          { queueID: queueIDWithPrefix, stationID, email, type: "queue-status" },
           SECRET_KEY,
           { expiresIn: "10h" }
         );
@@ -401,7 +401,7 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
     };
     const { queueID, email, stationID } = decodedToken;
     const queueRef = firestoreDb.collection("queue").doc(queueID);
-    await queueRef.set({customerStatus: "unsuccessful"}, {merge: true});
+    await queueRef.set({ customerStatus: "unsuccessful" }, { merge: true });
     const invalidTokenRef = firestoreDb
       .collection("invalid-token")
       .doc(req.token);
@@ -409,7 +409,7 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
     const station = await realtimeDb.ref(`stations/${stationID}`).get();
     // check if the customer is in the current serving
     const currentServingRef = realtimeDb.ref(`current-serving/${stationID}`);
-    type CounterWithID = {[key: string]: Counter};
+    type CounterWithID = { [key: string]: Counter };
     await currentServingRef.transaction((currentServing: CounterWithID) => {
       if (!currentServing) return;
 
@@ -427,7 +427,7 @@ export const leaveQueue = async (req: QueueRequest, res: Response) => {
     const counterSnapshot = await countersRef.once("value");
     const counters = counterSnapshot.val();
 
-    const countersWithKey: {[key: string]: Counter} = {};
+    const countersWithKey: { [key: string]: Counter } = {};
     Object.keys(counters).forEach((counterKey) => {
       const counterData = counters[counterKey] as Counter;
       countersWithKey[counterKey] = counterData;
@@ -735,3 +735,4 @@ export const notifyCurrentlyServing = async (
     res.status(500).json({ message: (error as Error).message });
   }
 };
+
