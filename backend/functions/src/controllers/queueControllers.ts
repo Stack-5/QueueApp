@@ -13,6 +13,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { recordLog } from "../utils/recordLog";
 import { ActionType } from "../types/activityLog";
 import { ZodError } from "zod";
+import { customerRatingSchema } from "../zod-schemas/customerRating";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 const NEUQUEUE_ROOT_URL = process.env.NEUQUEUE_ROOT_URL;
@@ -732,6 +733,34 @@ export const notifyCurrentlyServing = async (
     res.status(200).json({ message: "Currently serving notification sent" });
   } catch (error) {
     console.error("Error notifying serving customer:", error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const rateCashier = async (req: QueueRequest, res: Response) => {
+  try {
+    if (!req.token) {
+      res.status(400).json({ message: "Missing token" });
+      return;
+    }
+
+    const parsedBody = customerRatingSchema.parse(req.body);
+
+    const ratingRef = firestoreDb.collection("rating").doc(req.token);
+    const ratings = await ratingRef.get();
+
+    if (ratings.exists) {
+      res.status(403).json({ message: "Feedback already sent" });
+      return;
+    }
+
+    await ratingRef.set({
+      ...parsedBody,
+      ...(parsedBody.comment ? { comment: parsedBody.comment } : {}),
+    });
+
+    res.status(201).json({ message: "Feedback sent successfully!" });
+  } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
 };

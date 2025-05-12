@@ -11,6 +11,7 @@ import {
   leaveQueue,
   notifyCurrentlyServing,
   notifyOnSuccessScan,
+  rateCashier,
   storeFCMToken,
   verifyCustomerToken,
 } from "../controllers/queueControllers";
@@ -80,4 +81,7 @@ router.post(
   verifyTypedToken(["permission", "queue-form", "queue-status"]),
   storeFCMToken
 );
+
+router.post("/rate-cashier", verifyTypedToken(["queue-status"]), rateCashier);
+
 export default router;

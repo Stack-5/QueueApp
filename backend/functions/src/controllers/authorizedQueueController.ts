@@ -5,37 +5,40 @@ import CashierType from "../types/CashierType";
 import Counter from "../types/Counter";
 
 export const getAllOpenedStation = async (req: AuthRequest, res: Response) => {
-  if (!req.user) {
-    res.status(401).json({ message: "Unauthorized request" });
-    return;
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: "Unauthorized request" });
+      return;
+    }
+    const stationRef = realtimeDb.ref("stations");
+    const stationSnapshot = await stationRef.get();
+    const stations = stationSnapshot.val();
+
+
+    if (!stations) {
+      res.status(200).json({ openedStations: [] });
+      return;
+    }
+
+
+    type Station = {
+      id: string;
+      name: string;
+      description: string;
+      activated: boolean;
+      type: CashierType;
+    };
+
+    const allOpenedStations: Station[] = Object.entries(stations).map(([stationId, data]) => ({
+      id: stationId,
+      ...(data as Omit<Station, "id">),
+    })).filter((station) => station.activated === true);
+
+
+    res.status(200).json({ openedStations: allOpenedStations });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
   }
-
-  const stationRef = realtimeDb.ref("stations");
-  const stationSnapshot = await stationRef.get();
-  const stations = stationSnapshot.val();
-
-
-  if (!stations) {
-    res.status(200).json({ openedStations: [] });
-    return;
-  }
-
-
-  type Station = {
-    id: string;
-    name: string;
-    description: string;
-    activated: boolean;
-    type: CashierType;
-  };
-
-  const allOpenedStations: Station[] = Object.entries(stations).map(([stationId, data]) => ({
-    id: stationId,
-    ...(data as Omit<Station, "id">),
-  })).filter((station) => station.activated === true);
-
-
-  res.status(200).json({ openedStations: allOpenedStations });
 };
 
 
