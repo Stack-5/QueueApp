@@ -11,10 +11,12 @@ import {
   leaveQueue,
   notifyCurrentlyServing,
   notifyOnSuccessScan,
+  rateCashier,
   storeFCMToken,
   verifyCustomerToken,
 } from "../controllers/queueControllers";
 import { verifyAuthTokenAndDomain } from "../middlewares/verifyAuthTokenAndDomain";
+import { verifyRole } from "../middlewares/verifyRole";
 import {
   verifyTypedToken,
   verifyUsedToken,
@@ -23,7 +25,8 @@ import {
 // eslint-disable-next-line new-cap
 const router: Router = Router();
 
-router.get("/qrcode", verifyAuthTokenAndDomain, generateQrCode);
+router.get("/qrcode", verifyAuthTokenAndDomain,
+  verifyRole(["information", "cashier", "admin", "superAdmin"]), generateQrCode);
 router.post(
   "/add",
   verifyTypedToken(["queue-form"]),
@@ -78,4 +81,7 @@ router.post(
   verifyTypedToken(["permission", "queue-form", "queue-status"]),
   storeFCMToken
 );
+
+router.post("/rate-cashier", verifyTypedToken(["queue-status"]), rateCashier);
+
 export default router;

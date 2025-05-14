@@ -3,7 +3,7 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import routes from "./routes";
-import { firestoreDb } from "./config/firebaseConfig";
+import { firestoreDb, realtimeDb } from "./config/firebaseConfig";
 
 dotenv.config();
 const app: Express = express();
@@ -29,7 +29,10 @@ app.use(routes);
 export const neu = v2.https.onRequest(app);
 
 export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
-  "every day 19:00",
+  {
+    schedule: "every day 19:00",
+    timeZone: "Asia/Manila",
+  },
   async () => {
     try {
       const dateKey = new Date().toISOString();
@@ -39,7 +42,13 @@ export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
       const batch = firestoreDb.batch();
 
       queueSnapshot.forEach((doc) => {
-        batch.set(historyRef.doc(doc.id), doc.data());
+        const data = doc.data();
+
+        if (data.customerStatus === "ongoing" || data.customerStatus === "pending") {
+          data.customerStatus = "unsuccessful";
+        }
+
+        batch.set(historyRef.doc(doc.id), data);
         batch.delete(doc.ref);
       });
       await batch.commit();
@@ -47,7 +56,7 @@ export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
       const queueNumberSnapshot = await firestoreDb.collection("queue-numbers").get();
       const resetBatch = firestoreDb.batch();
       queueNumberSnapshot.forEach((doc) => {
-        resetBatch.set(doc.ref, {currentNumber: 0});
+        resetBatch.set(doc.ref, { currentNumber: 0 });
       });
       await resetBatch.commit();
       v2.logger.info("Reset all queue-numbers to 0.");
@@ -59,6 +68,22 @@ export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
       });
       await deleteBatch.commit();
       v2.logger.info(`Deleted all ${fcmTokensSnapshot.size} documents from fcm-tokens.`);
+
+      const counterRef = realtimeDb.ref("counters");
+      const counterSnapshot = await counterRef.get();
+      const counters = counterSnapshot.val();
+      if (counters) {
+        const deleteServing: Record<string, null> = {};
+        Object.keys(counters).forEach((counterId) => {
+          deleteServing[`counters/${counterId}/serving`] = null;
+        });
+        deleteServing["current-serving"] = null;
+        await realtimeDb.ref().update(deleteServing);
+        v2.logger
+          .info(`Deleted 'serving' attributes for ${Object.keys(counters).length} counters in Realtime Database.`);
+      } else {
+        v2.logger.info("No counters found in Realtime Database.");
+      }
     } catch (error) {
       v2.logger.error("Error archiving queue records or resetting queue numbers:", error);
     }

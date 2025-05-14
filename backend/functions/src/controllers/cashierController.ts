@@ -37,7 +37,7 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
     }
 
     const customerRef = firestoreDb.collection("queue");
-    const { customerDocID, customerEmail} = await firestoreDb.runTransaction(
+    const { customerDocID, customerEmail } = await firestoreDb.runTransaction(
       async (transaction) => {
         const queueSnapshot = await transaction.get(
           customerRef
@@ -67,20 +67,24 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
     );
     await currentServingRef.set(customerDocID);
 
+    if (!req.user) {
+      res.status(401).json({ message: "User ID is missing!" });
+      return;
+    }
+
     // 🔄 Assign Customer to Counter
     await counterRef.update({
       counterNumber,
       stationID,
-      uid: req.user?.uid,
+      uid: req.user.uid,
       serving: customerDocID, // ✅ Use document ID as queueID
     });
 
-    if (!req.user) {
-      res.status(401).json({message: "User ID is missing!"});
-      return;
-    }
     const receiver = await auth.getUser(req.user.uid);
     const displayName = receiver.displayName;
+
+    await customerRef.doc(customerDocID).set({ servedAt: Date.now() }, { merge: true });
+
     await recordLog(
       req.user.uid,
       ActionType.SERVE_CUSTOMER,
@@ -90,6 +94,8 @@ export const serveCustomer = async (req: AuthRequest, res: Response) => {
     await queueCountRef.transaction((currentValue) => {
       return currentValue === 1 ? 0 : 1;
     });
+
+
     res.status(200).json({
       message: "Customer assigned to cashier",
       customer: customerDocID,
@@ -109,6 +115,10 @@ export const completeTransaction = async (req: AuthRequest, res: Response) => {
       counterID,
     }: { queueID: string; stationID: string; counterID: string } = req.body;
 
+    if (!req.user) {
+      res.status(401).json({ message: "User ID is missing!" });
+      return;
+    }
     const queueRef = firestoreDb.collection("queue").doc(queueID);
     const queueSnapshot = await queueRef.get();
 
@@ -117,9 +127,11 @@ export const completeTransaction = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    await queueRef.update({
+    await queueRef.set({
       customerStatus: "complete",
-    });
+      completedAt: Date.now(),
+      servedBy: req.user.uid,
+    }, { merge: true });
 
     const currentServingRef = realtimeDb.ref(
       `current-serving/${stationID}/${counterID}`
@@ -131,10 +143,7 @@ export const completeTransaction = async (req: AuthRequest, res: Response) => {
     );
     const currentCustomerData = await currentCounterServing.get();
     const currentCustomer = currentCustomerData.val();
-    if (!req.user) {
-      res.status(401).json({message: "User ID is missing!"});
-      return;
-    }
+
     const receiver = await auth.getUser(req.user.uid);
     const displayName = receiver.displayName;
     await recordLog(
@@ -243,10 +252,10 @@ export const getCurrentServing = async (req: AuthRequest, res: Response) => {
 
 export const notifyCustomer = async (req: AuthRequest, res: Response) => {
   try {
-    const {counterNumber, queueID}: {counterNumber: string, queueID: string} = req.body;
+    const { counterNumber, queueID }: { counterNumber: string, queueID: string } = req.body;
 
     if (!counterNumber || !queueID) {
-      res.status(400).json({message: "Missing Counter Number or QueueID"});
+      res.status(400).json({ message: "Missing Counter Number or QueueID" });
       return;
     }
     const queueDoc = await firestoreDb.collection("queue").doc(queueID).get();
@@ -296,14 +305,21 @@ export const skipCustomer = async (req: AuthRequest, res: Response) => {
     const queueRef = firestoreDb.collection("queue").doc(queueID);
     const queueSnapshot = await queueRef.get();
 
+    if (!req.user) {
+      res.status(401).json({ message: "User ID is missing!" });
+      return;
+    }
+
     if (!queueSnapshot.exists) {
       res.status(404).json({ message: "Queue entry not found" });
       return;
     }
 
-    await queueRef.update({
+    await queueRef.set({
       customerStatus: "unsuccessful",
-    });
+      completedAt: Date.now(),
+      servedBy: req.user.uid,
+    }, { merge: true });
 
     const currentServingRef = realtimeDb.ref(
       `current-serving/${stationID}/${counterID}`
@@ -314,10 +330,6 @@ export const skipCustomer = async (req: AuthRequest, res: Response) => {
       `counters/${counterID}/serving`
     );
     await currentCounterServing.remove();
-    if (!req.user) {
-      res.status(401).json({message: "User ID is missing!"});
-      return;
-    }
 
     const customerRef = firestoreDb.collection("queue").doc(queueID);
     const customer = await customerRef.get();
@@ -337,11 +349,11 @@ export const skipCustomer = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getRemainingPendingCustomerCount = async (req: AuthRequest, res:Response) => {
+export const getRemainingPendingCustomerCount = async (req: AuthRequest, res: Response) => {
   try {
-    const {stationID} = req.query;
+    const { stationID } = req.query;
     if (!stationID) {
-      res.status(400).json({message: "Missing StationID"});
+      res.status(400).json({ message: "Missing StationID" });
       return;
     }
     const queueRef = firestoreDb.collection("queue")
@@ -349,7 +361,7 @@ export const getRemainingPendingCustomerCount = async (req: AuthRequest, res:Res
       .where("stationID", "==", stationID.toString());
 
     const remainingQueue = await queueRef.get();
-    res.status(200).json({remainingCustomersCount: remainingQueue.size});
+    res.status(200).json({ remainingCustomersCount: remainingQueue.size });
   } catch (error) {
     res.status(500).json({ message: (error as Error).message });
   }
