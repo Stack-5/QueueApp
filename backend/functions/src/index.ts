@@ -29,7 +29,10 @@ app.use(routes);
 export const neu = v2.https.onRequest(app);
 
 export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
-  "every day 19:00",
+  {
+    schedule: "every day 19:00",
+    timeZone: "Asia/Manila",
+  },
   async () => {
     try {
       const dateKey = new Date().toISOString();
@@ -74,6 +77,7 @@ export const archiveQueueAndResetQueueNumbers = v2.scheduler.onSchedule(
         Object.keys(counters).forEach((counterId) => {
           deleteServing[`counters/${counterId}/serving`] = null;
         });
+        deleteServing["current-serving"] = null;
         await realtimeDb.ref().update(deleteServing);
         v2.logger
           .info(`Deleted 'serving' attributes for ${Object.keys(counters).length} counters in Realtime Database.`);
